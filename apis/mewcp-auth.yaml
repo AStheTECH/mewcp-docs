@@ -40,8 +40,10 @@ info:
     email: contact@asthetech.com
 
 servers:
-  - url: https://mewcp.com/servers
+  - url: https://gateway.mewcp.com
     description: Production
+  # - url: http://localhost:5656
+  #   description: Local development
 
 security:
   - AccountApiKey: []
