@@ -1,0 +1,83 @@
+---
+title: CrewAI
+description: Connect MewCP to a CrewAI agent.
+---
+
+## Install
+
+```bash
+pip install crewai "crewai-tools[mcp]"
+```
+
+---
+
+## Connect and call a tool
+
+`MCPServerAdapter` wraps MCP tools as CrewAI-compatible tools. It requires a context manager to manage the connection lifecycle:
+
+```python
+from crewai_tools import MCPServerAdapter
+
+MASKED_ID = "YOUR_MASKED_ID"
+MEWCP_KEY = "YOUR_MEWCP_KEY"
+
+server_params = {
+    "url": f"https://gateway.mewcp.com/{MASKED_ID}/mcp",
+    "transport": "streamable-http",
+    "headers": {
+        "Authorization": f"Bearer {MEWCP_KEY}",
+        "x-mewcp-credential-id": "YOUR_CREDENTIAL_ID",
+    },
+}
+
+with MCPServerAdapter(server_params) as mcp_tools:
+    print("Available tools:", [t.name for t in mcp_tools])
+
+    # Call the scrape tool directly
+    scrape_tool = next(t for t in mcp_tools if t.name == "scrape")
+    result = scrape_tool.run({"url": "https://mewcp.com"})
+    print(result)
+```
+
+> Note: `transport` must be `"streamable-http"` (hyphenated).
+
+---
+
+## Use with a CrewAI agent
+
+```python
+from crewai import Agent, Task, Crew
+from crewai_tools import MCPServerAdapter
+
+server_params = {
+    "url": f"https://gateway.mewcp.com/{MASKED_ID}/mcp",
+    "transport": "streamable-http",
+    "headers": {"Authorization": f"Bearer {MEWCP_KEY}"},
+}
+
+with MCPServerAdapter(server_params) as mcp_tools:
+    agent = Agent(
+        role="Web Researcher",
+        goal="Research and summarize web content",
+        backstory="Expert at extracting information from web pages.",
+        tools=list(mcp_tools),
+        verbose=True,
+    )
+    task = Task(
+        description="Scrape https://mewcp.com and summarize the content.",
+        expected_output="A short summary of the page content.",
+        agent=agent,
+    )
+    crew = Crew(agents=[agent], tasks=[task])
+    crew.kickoff()
+```
+
+---
+
+## Where to find your values
+
+| Value | Where to get it |
+|-------|----------------|
+| `YOUR_MASKED_ID` | Dashboard -> your subscribed server -> server detail page |
+| `YOUR_MEWCP_KEY` | Dashboard -> Credentials -> MewCP Keys |
+| `YOUR_CREDENTIAL_ID` | Dashboard -> Credentials -> click the credential -> copy ID |

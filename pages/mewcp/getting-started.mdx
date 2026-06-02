@@ -1,0 +1,97 @@
+---
+title: Getting Started
+description: Go from a new MewCP account to calling your first MCP tool.
+---
+
+## What you will build
+
+By the end of this tutorial you will have Claude Desktop connected to MewCP's **Web Scraper** server and will have called the `scrape` tool to fetch a live web page.
+
+**Time:** about 5 minutes.
+
+**What you need:**
+- A MewCP account ([sign up](https://mewcp.com))
+- Claude Desktop installed ([download](https://claude.ai/download))
+- Node.js installed (needed by the `mcp-remote` bridge Claude Desktop uses)
+
+---
+
+## Step 1: Subscribe to the Web Scraper server
+
+1. Log in to the [MewCP dashboard](https://mewcp.com/dashboard)
+2. Go to **MCP Servers** and find **Web Scraper**
+3. Click **Subscribe**
+4. Open the server detail page and copy your **Masked ID** (a short string like `abc123`)
+
+---
+
+## Step 2: Get your MewCP Key
+
+1. In the dashboard go to **Credentials**
+2. Under **MewCP Keys**, click **Generate Key**
+3. Give it a label like `claude-desktop` and copy the key
+
+Your key looks like: `mewcp_7df44e73e8cd42bb...`
+
+Keep this key safe. You will put it in the Claude Desktop config next.
+
+---
+
+## Step 3: Connect Claude Desktop
+
+Open your Claude Desktop config file:
+
+| Platform | Path |
+|----------|------|
+| macOS | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| Windows | `%APPDATA%\Claude\claude_desktop_config.json` |
+
+Replace `YOUR_MASKED_ID` and `your_key_here` with your actual values:
+
+```json
+{
+  "mcpServers": {
+    "YOUR_MASKED_ID": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote@latest",
+        "https://gateway.mewcp.com/YOUR_MASKED_ID/mcp",
+        "--header",
+        "Authorization: Bearer ${MEWCP_KEY}"
+      ],
+      "env": {
+        "MEWCP_KEY": "your_key_here"
+      }
+    }
+  }
+}
+```
+
+Save the file and **restart Claude Desktop**.
+
+You will see a tools icon appear in the chat panel confirming the server is connected.
+
+---
+
+## Step 4: Call your first tool
+
+Open a new Claude Desktop chat and type:
+
+```
+Use the scrape tool to fetch https://mewcp.com and tell me the page title.and description.
+```
+
+Claude will call the `scrape` tool and return the result. You should see something like:
+
+> The page title is **"Example Domain"** and the description says it is for use in illustrative examples.
+
+That is it. You have made your first MCP tool call through MewCP.
+
+---
+
+## What's next
+
+- **Other clients**: Connect via [VS Code and Cursor](/mewcp/connect/vscode-cursor), [TypeScript](/mewcp/connect/typescript), [Python](/mewcp/connect/python), or [Codex](/mewcp/connect/codex)
+- **AI agent frameworks**: Wire MewCP into [Google ADK](/mewcp/connect-agents/google-adk), [LangChain](/mewcp/connect-agents/langchain-python), [CrewAI](/mewcp/connect-agents/crewai), and more
+- **B2B / multi-user apps**: Use the [MewCP Auth API](/mewcp-auth) to manage credentials for your audience

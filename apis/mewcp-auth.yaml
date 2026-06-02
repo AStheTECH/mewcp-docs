@@ -1,0 +1,468 @@
+openapi: 3.1.0
+info:
+  title: MewCP Auth API
+  description: |
+
+
+    B2B API for connecting your audience to MCP-powered tools via OAuth or static credentials.
+
+    ## Authentication
+
+    All endpoints require an **Account API Key** passed as a Bearer token:
+
+    ```
+    Authorization: Bearer mewcp_acct_YOUR_KEY
+    ```
+
+    Generate an Account API Key from your MewCP dashboard under **Developer -> Account API Keys**.
+
+    ## Overview
+
+    The MewCP Auth API lets you manage audience member credentials so your users can access MCP servers
+    without handling OAuth flows or credential storage themselves. Your backend initiates flows,
+    MewCP handles the credential lifecycle.
+
+    **Typical flow (OAuth):**
+    1. Register your OAuth app in the MewCP dashboard under **Credentials -> OAuth Apps**
+    2. When a user wants to connect, call `POST /oauth/{provider}/start` with their `externalUserId`
+    3. Redirect the user to the returned `authUrl`
+    4. MewCP stores the credential. Subsequent MCP calls include `x-external-user-id: {externalUserId}`
+
+    **Typical flow (static credentials):**
+    1. Call `POST /credentials/static/{providerSlug}/connect` with the user's `externalUserId`
+    2. Send the returned `hostedFormUrl` to your user (email, redirect, in-app link)
+    3. User fills in their API key or token on MewCP's hosted page
+    4. MewCP stores the credential. Subsequent MCP calls include `x-external-user-id: {externalUserId}`
+
+  version: 1.0.0
+  contact:
+    name: MewCP Support
+    email: contact@asthetech.com
+
+servers:
+  - url: https://mewcp.com/servers
+    description: Production
+
+security:
+  - AccountApiKey: []
+
+tags:
+  - name: OAuth
+    description: Initiate OAuth authorization flows for your audience. Requires an OAuth app registered in the MewCP dashboard first.
+  - name: Static Credentials
+    description: Generate hosted form URLs so audience can submit static API keys or tokens.
+  - name: Audience
+    description: List, inspect, and revoke audience member credentials.
+
+components:
+  securitySchemes:
+    AccountApiKey:
+      type: http
+      scheme: bearer
+      description: |
+        Account API key with `mewcp_acct_` prefix.
+        Generate one from **Developer -> Account API Keys** in your MewCP dashboard.
+      bearerFormat: mewcp_acct_...
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: not_found
+        message:
+          type: string
+          example: End-user not found
+
+    ExternalUserMeta:
+      type: object
+      description: Optional metadata about the audience member. Stored alongside their credentials for display in the MewCP dashboard.
+      properties:
+        name:
+          type: string
+          example: Jane Smith
+        email:
+          type: string
+          example: jane@example.com
+        username:
+          type: string
+          example: janesmith
+
+    Credential:
+      type: object
+      properties:
+        credentialId:
+          type: string
+          description: Unique public credential ID
+          example: cred_01HX7Z
+        providerSlug:
+          type: string
+          example: github
+        label:
+          type: string
+          example: janesmith
+        authType:
+          type: string
+          enum: [oauth, static]
+        scopes:
+          type: array
+          items:
+            type: string
+          example: [repo, read:user]
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    EndUser:
+      type: object
+      properties:
+        externalUserId:
+          type: string
+          description: Your internal identifier for this user
+          example: user_abc123
+        meta:
+          $ref: "#/components/schemas/ExternalUserMeta"
+          nullable: true
+        connectedProviders:
+          type: array
+          items:
+            type: string
+          description: List of provider slugs this user has credentials for
+          example: [github, linear]
+        credentialCount:
+          type: integer
+          example: 2
+        lastUpdated:
+          type: string
+          format: date-time
+
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: Missing or invalid account API key
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+paths:
+  /oauth/{provider}/start:
+    post:
+      operationId: startOAuthFlow
+      summary: Start OAuth flow for an audience member
+      description: |
+        Generates an authorization URL to redirect your audience member to. After the user
+        authorizes, MewCP stores the credential under their `externalUserId`.
+
+        **Prerequisite:** Register an OAuth app for the provider first in the MewCP dashboard
+        under **Credentials -> OAuth Apps**. This step is done once per provider.
+
+        After success, subsequent MCP proxy calls include `x-external-user-id: {externalUserId}`
+        in the request headers and MewCP resolves the right credential automatically.
+      tags: [OAuth]
+      parameters:
+        - in: path
+          name: provider
+          required: true
+          schema:
+            type: string
+          description: Provider slug (e.g. `github`, `linear`, `notion`)
+          example: github
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [externalUserId]
+              properties:
+                externalUserId:
+                  type: string
+                  description: Your internal user identifier. Used to associate the credential with your user.
+                  example: user_abc123
+                frontendCallbackUrl:
+                  type: string
+                  description: URL to redirect the user to after OAuth completes (receives `?provider=github&success=true`)
+                  example: https://yourapp.com/settings/connections/callback
+                appId:
+                  type: string
+                  description: Specific OAuth app ID. Defaults to the registered app for this provider.
+                externalUserMeta:
+                  $ref: "#/components/schemas/ExternalUserMeta"
+            example:
+              externalUserId: user_abc123
+              frontendCallbackUrl: https://yourapp.com/settings/connections/callback
+              externalUserMeta:
+                name: Jane Smith
+                email: jane@example.com
+      responses:
+        "200":
+          description: Authorization URL ready. Redirect your user to `authUrl`.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  authUrl:
+                    type: string
+                    description: Redirect your audience member to this URL
+                    example: https://github.com/login/oauth/authorize?client_id=...
+                  state:
+                    type: string
+                    description: CSRF state token (managed internally, no action needed)
+        "400":
+          description: OAuth app not configured or invalid provider
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Error"
+                  - type: object
+                    properties:
+                      setupRequired:
+                        type: boolean
+                        description: True when an OAuth app needs to be registered in the dashboard first
+              examples:
+                app_missing:
+                  summary: OAuth app not registered
+                  value:
+                    error: oauth_app_required
+                    message: "No OAuth app configured for provider 'github'. Please register your OAuth client credentials in the MewCP dashboard before connecting."
+                    setupRequired: true
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /credentials/static/{providerSlug}/connect:
+    post:
+      operationId: startStaticCredentialFlow
+      summary: Get hosted form URL for audience member static credentials
+      description: |
+        Issues a short-lived (5 min) signed URL pointing to a MewCP-hosted form where
+        your audience member can submit their static API key or token.
+
+        Send this URL to your user however you prefer (redirect, email, in-app link).
+        When they submit, MewCP stores the credential under their `externalUserId`.
+
+        After success, subsequent MCP proxy calls include `x-external-user-id: {externalUserId}`
+        and MewCP resolves the right credential automatically.
+      tags: [Static Credentials]
+      parameters:
+        - in: path
+          name: providerSlug
+          required: true
+          schema:
+            type: string
+          description: Provider slug for the static credential type
+          example: linear
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [externalUserId]
+              properties:
+                externalUserId:
+                  type: string
+                  description: Your internal user identifier
+                  example: user_abc123
+                frontendCallbackUrl:
+                  type: string
+                  description: URL to redirect the user to after submitting credentials
+                  example: https://yourapp.com/settings/connections/callback
+                externalUserMeta:
+                  $ref: "#/components/schemas/ExternalUserMeta"
+            example:
+              externalUserId: user_abc123
+              frontendCallbackUrl: https://yourapp.com/settings/connections/callback
+              externalUserMeta:
+                name: Jane Smith
+                email: jane@example.com
+      responses:
+        "200":
+          description: Hosted form URL. Send this to your audience member.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hostedFormUrl:
+                    type: string
+                    description: Send this URL to your user. Expires in 5 minutes.
+                    example: https://gateway.mewcp.com/connect/static?token=eyJ...
+                  expiresInMinutes:
+                    type: integer
+                    example: 5
+        "400":
+          description: Invalid provider or provider uses OAuth (not static)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /audience:
+    get:
+      operationId: listEndUsers
+      summary: List audience
+      description: Returns all audience that have at least one active credential under your account, sorted by most recently updated.
+      tags: [Audience]
+      responses:
+        "200":
+          description: List of audience
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EndUser"
+              example:
+                - externalUserId: user_abc123
+                  meta:
+                    name: Jane Smith
+                    email: jane@example.com
+                  connectedProviders: [github, linear]
+                  credentialCount: 2
+                  lastUpdated: "2025-06-01T10:00:00Z"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /audience/{externalUserId}:
+    get:
+      operationId: getEndUser
+      summary: Get audience member details
+      description: Returns an audience member's metadata and all their active credentials.
+      tags: [Audience]
+      parameters:
+        - in: path
+          name: externalUserId
+          required: true
+          schema:
+            type: string
+          description: Your internal user identifier
+          example: user_abc123
+      responses:
+        "200":
+          description: End-user details with credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  externalUserId:
+                    type: string
+                  meta:
+                    $ref: "#/components/schemas/ExternalUserMeta"
+                    nullable: true
+                  credentials:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Credential"
+              example:
+                externalUserId: user_abc123
+                meta:
+                  name: Jane Smith
+                  email: jane@example.com
+                credentials:
+                  - credentialId: cred_01HX7Z
+                    providerSlug: github
+                    label: janesmith
+                    authType: oauth
+                    scopes: [repo, read:user]
+                    expiresAt: null
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+    delete:
+      operationId: revokeEndUser
+      summary: Revoke all credentials for an audience member
+      description: |
+        Soft-deletes all active credentials for the audience member. The user will no longer be able
+        to make MCP calls until they reconnect.
+
+        This is a cascade operation and revokes all providers at once. To revoke a single
+        credential, use `DELETE /audience/{externalUserId}/credentials/{credentialId}`.
+      tags: [Audience]
+      parameters:
+        - in: path
+          name: externalUserId
+          required: true
+          schema:
+            type: string
+          example: user_abc123
+      responses:
+        "200":
+          description: All credentials revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  revokedCount:
+                    type: integer
+                    description: Number of credentials that were revoked
+              example:
+                success: true
+                revokedCount: 2
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /audience/{externalUserId}/credentials/{credentialId}:
+    delete:
+      operationId: revokeEndUserCredential
+      summary: Revoke a single audience member credential
+      description: Revokes one specific credential for an audience member, leaving any other provider credentials intact.
+      tags: [Audience]
+      parameters:
+        - in: path
+          name: externalUserId
+          required: true
+          schema:
+            type: string
+          example: user_abc123
+        - in: path
+          name: credentialId
+          required: true
+          schema:
+            type: string
+          description: Credential ID returned by the list or get audience member endpoints
+          example: cred_01HX7Z
+      responses:
+        "200":
+          description: Credential revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  credentialId:
+                    type: string
+              example:
+                success: true
+                credentialId: cred_01HX7Z
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"

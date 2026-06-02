@@ -1,0 +1,49 @@
+---
+title: MewCP Key
+description: The key used to authenticate MCP client connections to the gateway.
+---
+
+A **MewCP Key** authenticates MCP client connections to the gateway. Every time Claude Desktop, VS Code, or your application makes a request through `gateway.mewcp.com`, it presents this key.
+
+---
+
+## Format
+
+```
+mewcp_<hex token>
+```
+
+Example: `mewcp_7df44e73e8cd42bbf4860ffc66520ef...`
+
+---
+
+## How to get one
+
+1. Go to **Dashboard -> Credentials**
+2. Under **MewCP Keys**, click **Generate Key**
+3. Give it a label (e.g. `claude-desktop`, `prod-backend`) and copy the key
+
+---
+
+## How to use it
+
+Pass it as a Bearer token in the `Authorization` header:
+
+```
+Authorization: Bearer MEWCP_KEY
+```
+
+In client configs:
+
+```json
+"headers": {
+  "Authorization": "Bearer MEWCP_KEY"
+}
+```
+
+---
+
+## Best practices
+
+- **Never put it in frontend code.** MewCP Keys are for server-to-gateway connections only.
+- **Revoke if compromised.** Go to **Credentials -> MewCP Keys**, click **Revoke**. The old key stops working immediately.

@@ -1,0 +1,95 @@
+---
+title: Claude SDK
+description: Connect MewCP to Claude via the Anthropic Python SDK.
+---
+
+## Install
+
+```bash
+pip install anthropic
+```
+
+---
+
+## How it works
+
+The Anthropic SDK's MCP connector is different from other frameworks. Rather than giving you a direct MCP client, it lets the **Anthropic API** act as the MCP client on your behalf. You attach the MCP server to your API call, Claude decides which tools to call, and the API handles the MCP protocol round-trip.
+
+You cannot call `list_tools()` or `call_tool()` imperatively. The model drives all tool use.
+
+---
+
+## Example
+
+```python
+import anthropic
+
+MASKED_ID = "YOUR_MASKED_ID"
+MEWCP_KEY = "YOUR_MEWCP_KEY"
+
+client = anthropic.Anthropic()
+
+response = client.beta.messages.create(
+    model="claude-opus-4-5",
+    max_tokens=2048,
+    messages=[
+        {
+            "role": "user",
+            "content": "Use the scrape tool to fetch https://mewcp.com and return the page title and description.",
+        }
+    ],
+    mcp_servers=[
+        {
+            "type": "url",
+            "url": f"https://gateway.mewcp.com/{MASKED_ID}/mcp",
+            "name": "mewcp",
+            "authorization_token": MEWCP_KEY,
+        }
+    ],
+    betas=["mcp-client-2025-11-20"],
+)
+
+# The response may contain text blocks and mcp_tool_result blocks
+for block in response.content:
+    if hasattr(block, "text"):
+        print(block.text)
+```
+
+---
+
+## With a credential
+
+Pass the credential ID as an extra header via the `headers` field on the server config:
+
+```python
+mcp_servers=[
+    {
+        "type": "url",
+        "url": f"https://gateway.mewcp.com/{MASKED_ID}/mcp",
+        "name": "mewcp",
+        "authorization_token": MEWCP_KEY,
+        "headers": {
+            "x-mewcp-credential-id": "YOUR_CREDENTIAL_ID",
+        },
+    }
+]
+```
+
+---
+
+## Important notes
+
+- `authorization_token` sends the value as `Authorization: Bearer <token>`. Do not put `Bearer` in the value.
+- The beta header is `"mcp-client-2025-11-20"`. The older `mcp-client-2025-04-04` is deprecated.
+- Only MCP **tools** are supported via this connector. Prompts and resources are not exposed.
+- The server URL must be `https://`.
+
+---
+
+## Where to find your values
+
+| Value | Where to get it |
+|-------|----------------|
+| `YOUR_MASKED_ID` | Dashboard -> your subscribed server -> server detail page |
+| `YOUR_MEWCP_KEY` | Dashboard -> Credentials -> MewCP Keys |
+| `YOUR_CREDENTIAL_ID` | Dashboard -> Credentials -> click the credential -> copy ID |

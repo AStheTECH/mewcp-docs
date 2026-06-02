@@ -1,0 +1,69 @@
+---
+title: Python MCP Client
+description: Connect to MewCP from a Python application using fastmcp.
+---
+
+## Install
+
+```bash
+pip install fastmcp
+```
+
+---
+
+## Example
+
+```python
+import asyncio
+from fastmcp import Client
+
+GATEWAY_URL = "https://gateway.mewcp.com/YOUR_MASKED_ID/mcp"
+MEWCP_KEY = "YOUR_MEWCP_KEY"
+CREDENTIAL_ID = "YOUR_CREDENTIAL_ID"
+
+headers = {
+    "Authorization": f"Bearer {MEWCP_KEY}",
+    "x-mewcp-credential-id": CREDENTIAL_ID,
+}
+
+async def main():
+    client = Client(GATEWAY_URL, headers=headers)
+
+    async with client:
+        await client.ping()
+
+        tools = await client.list_tools()
+        print("Available tools:", [t.name for t in tools])
+
+        # Call the scrape tool
+        result = await client.call_tool("scrape", {"url": "https://mewcp.com"})
+        print(result)
+
+asyncio.run(main())
+```
+
+---
+
+## B2B: audience member credential routing
+
+If you are managing audience member credentials via the [MewCP Auth API](/mewcp-auth),
+pass the user's ID instead of a credential ID:
+
+```python
+headers = {
+    "Authorization": f"Bearer {MEWCP_KEY}",
+    "x-external-user-id": current_user.id,
+}
+```
+
+MewCP resolves the stored credential for that user automatically.
+
+---
+
+## Where to find your values
+
+| Value | Where to get it |
+|-------|----------------|
+| `YOUR_MASKED_ID` | Dashboard -> your subscribed server -> server detail page |
+| `YOUR_MEWCP_KEY` | Dashboard -> Credentials -> MewCP Keys |
+| `YOUR_CREDENTIAL_ID` | Dashboard -> Credentials -> click the credential -> copy ID |

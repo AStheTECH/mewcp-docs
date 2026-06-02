@@ -1,0 +1,91 @@
+---
+title: Claude Desktop
+description: Connect MewCP to Claude Desktop.
+---
+
+## Prerequisites
+
+- Claude Desktop installed ([download](https://claude.ai/download))
+- Node.js installed (used by the `mcp-remote` bridge)
+- A MewCP Key - see [Authentication](/mewcp/authentication)
+
+---
+
+## Configuration
+
+Open your Claude Desktop config file:
+
+| Platform | Path |
+|----------|------|
+| macOS | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| Windows | `%APPDATA%\Claude\claude_desktop_config.json` |
+
+Add your MewCP server under `mcpServers`:
+
+```json
+{
+  "mcpServers": {
+    "YOUR_MASKED_ID": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote@latest",
+        "https://gateway.mewcp.com/YOUR_MASKED_ID/mcp",
+        "--header",
+        "Authorization: Bearer ${MEWCP_KEY}"
+      ],
+      "env": {
+        "MEWCP_KEY": "your_key_here"
+      }
+    }
+  }
+}
+```
+
+If the server requires a credential, add it as an additional header arg:
+
+```json
+{
+  "mcpServers": {
+    "YOUR_MASKED_ID": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote@latest",
+        "https://gateway.mewcp.com/YOUR_MASKED_ID/mcp",
+        "--header",
+        "Authorization: Bearer ${MEWCP_KEY}",
+        "--header",
+        "x-mewcp-credential-id: YOUR_CREDENTIAL_ID"
+      ],
+      "env": {
+        "MEWCP_KEY": "your_key_here"
+      }
+    }
+  }
+}
+```
+
+Save the file and restart Claude Desktop. A tools icon will appear in the chat panel when the server is connected.
+
+---
+
+## Try it
+
+If you connected the **Web Scraper** server, open a chat and type:
+
+```
+Use the scrape tool to fetch https://mewcp.com and tell me the page title.
+```
+
+Claude will call the `scrape` tool and return the result.
+
+---
+
+## Where to find your values
+
+| Value | Where to get it |
+|-------|----------------|
+| `YOUR_MASKED_ID` | Dashboard -> your subscribed server -> server detail page |
+| `your_key_here` | Dashboard -> Credentials -> MewCP Keys |
+| `YOUR_CREDENTIAL_ID` | Dashboard -> Credentials -> click the credential -> copy ID |

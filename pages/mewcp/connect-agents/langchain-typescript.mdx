@@ -1,0 +1,92 @@
+---
+title: LangChain TypeScript
+description: Connect MewCP to a LangChain TypeScript agent.
+---
+
+## Install
+
+```bash
+npm install @langchain/mcp-adapters
+```
+
+---
+
+## Connect and call a tool
+
+```typescript
+import { MultiServerMCPClient } from "@langchain/mcp-adapters";
+
+const MASKED_ID = "YOUR_MASKED_ID";
+const MEWCP_KEY = "YOUR_MEWCP_KEY";
+
+async function main() {
+  const client = new MultiServerMCPClient({
+    mcpServers: {
+      mewcp: {
+        url: `https://gateway.mewcp.com/${MASKED_ID}/mcp`,
+        headers: {
+          Authorization: `Bearer ${MEWCP_KEY}`,
+          "x-mewcp-credential-id": "YOUR_CREDENTIAL_ID",
+        },
+      },
+    },
+  });
+
+  const tools = await client.getTools();
+  console.log("Available tools:", tools.map((t) => t.name));
+
+  // Call the scrape tool directly
+  const scrapeTool = tools.find((t) => t.name === "scrape")!;
+  const result = await scrapeTool.invoke({ url: "https://mewcp.com" });
+  console.log(result);
+
+  await client.close();
+}
+
+main();
+```
+
+---
+
+## Use with a LangChain agent
+
+```typescript
+import { MultiServerMCPClient } from "@langchain/mcp-adapters";
+import { ChatOpenAI } from "@langchain/openai";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
+import { HumanMessage } from "@langchain/core/messages";
+
+async function main() {
+  const client = new MultiServerMCPClient({
+    mcpServers: {
+      mewcp: {
+        url: `https://gateway.mewcp.com/${MASKED_ID}/mcp`,
+        headers: { Authorization: `Bearer ${MEWCP_KEY}` },
+      },
+    },
+  });
+
+  const tools = await client.getTools();
+  const model = new ChatOpenAI({ model: "gpt-4o" });
+  const agent = createReactAgent({ llm: model, tools });
+
+  const result = await agent.invoke({
+    messages: [new HumanMessage("Scrape https://mewcp.com and summarize it.")],
+  });
+  console.log(result.messages.at(-1)?.content);
+
+  await client.close();
+}
+
+main();
+```
+
+---
+
+## Where to find your values
+
+| Value | Where to get it |
+|-------|----------------|
+| `YOUR_MASKED_ID` | Dashboard -> your subscribed server -> server detail page |
+| `YOUR_MEWCP_KEY` | Dashboard -> Credentials -> MewCP Keys |
+| `YOUR_CREDENTIAL_ID` | Dashboard -> Credentials -> click the credential -> copy ID |

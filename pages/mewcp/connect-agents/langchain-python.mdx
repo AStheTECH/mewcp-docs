@@ -1,0 +1,90 @@
+---
+title: LangChain Python
+description: Connect MewCP to a LangChain Python agent.
+---
+
+## Install
+
+```bash
+pip install langchain-mcp-adapters
+```
+
+---
+
+## Connect and call a tool
+
+```python
+import asyncio
+from langchain_mcp_adapters.client import MultiServerMCPClient
+
+MASKED_ID = "YOUR_MASKED_ID"
+MEWCP_KEY = "YOUR_MEWCP_KEY"
+
+async def main():
+    async with MultiServerMCPClient(
+        {
+            "mewcp": {
+                "transport": "streamable_http",
+                "url": f"https://gateway.mewcp.com/{MASKED_ID}/mcp",
+                "headers": {
+                    "Authorization": f"Bearer {MEWCP_KEY}",
+                    "x-mewcp-credential-id": "YOUR_CREDENTIAL_ID",
+                },
+            }
+        }
+    ) as client:
+        tools = await client.get_tools()
+        print("Available tools:", [t.name for t in tools])
+
+        # Call the scrape tool directly
+        scrape_tool = next(t for t in tools if t.name == "scrape")
+        result = await scrape_tool.ainvoke({"url": "https://mewcp.com"})
+        print(result)
+
+asyncio.run(main())
+```
+
+> Note: `transport` value is `"streamable_http"` (underscore).
+
+---
+
+## Use with a LangChain agent
+
+```python
+import asyncio
+from langchain_mcp_adapters.client import MultiServerMCPClient
+from langchain_openai import ChatOpenAI
+from langgraph.prebuilt import create_react_agent
+
+async def main():
+    async with MultiServerMCPClient(
+        {
+            "mewcp": {
+                "transport": "streamable_http",
+                "url": f"https://gateway.mewcp.com/{MASKED_ID}/mcp",
+                "headers": {"Authorization": f"Bearer {MEWCP_KEY}"},
+            }
+        }
+    ) as client:
+        tools = await client.get_tools()
+
+        model = ChatOpenAI(model="gpt-4o")
+        agent = create_react_agent(model, tools)
+
+        result = await agent.ainvoke(
+            {"messages": [{"role": "user", "content": "Scrape https://mewcp.com and summarize it."}]}
+        )
+        print(result["messages"][-1].content)
+
+asyncio.run(main())
+```
+
+---
+
+## Where to find your values
+
+| Value | Where to get it |
+|-------|----------------|
+| `YOUR_MASKED_ID` | Dashboard -> your subscribed server -> server detail page |
+| `YOUR_MEWCP_KEY` | Dashboard -> Credentials -> MewCP Keys |
+| `YOUR_CREDENTIAL_ID` | Dashboard -> Credentials -> click the credential -> copy ID |

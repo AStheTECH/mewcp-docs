@@ -1,0 +1,132 @@
+---
+title: VS Code & Cursor
+description: Connect MewCP to VS Code or Cursor.
+---
+
+## Prerequisites
+
+- VS Code with GitHub Copilot extension, or Cursor
+- A MewCP Key - see [Authentication](/mewcp/authentication)
+
+---
+
+## VS Code
+
+Open **Command Palette** (`Cmd+Shift+P` / `Ctrl+Shift+P`) and select **Open User Settings (JSON)**.
+
+Add your MewCP server under the `mcp` key. VS Code will prompt you for the key securely the first time:
+
+```json
+{
+  "mcp": {
+    "inputs": [
+      {
+        "type": "promptString",
+        "id": "YOUR_MASKED_ID",
+        "description": "MewCP Key",
+        "password": true
+      }
+    ],
+    "servers": {
+      "YOUR_MASKED_ID": {
+        "type": "http",
+        "url": "https://gateway.mewcp.com/YOUR_MASKED_ID/mcp",
+        "headers": {
+          "Authorization": "Bearer ${input:YOUR_MASKED_ID}"
+        }
+      }
+    }
+  }
+}
+```
+
+With a credential:
+
+```json
+{
+  "mcp": {
+    "inputs": [
+      {
+        "type": "promptString",
+        "id": "YOUR_MASKED_ID",
+        "description": "MewCP Key",
+        "password": true
+      }
+    ],
+    "servers": {
+      "YOUR_MASKED_ID": {
+        "type": "http",
+        "url": "https://gateway.mewcp.com/YOUR_MASKED_ID/mcp",
+        "headers": {
+          "Authorization": "Bearer ${input:YOUR_MASKED_ID}",
+          "x-mewcp-credential-id": "YOUR_CREDENTIAL_ID"
+        }
+      }
+    }
+  }
+}
+```
+
+---
+
+## Cursor
+
+Create or edit your Cursor MCP config file:
+
+| Platform | Path |
+|----------|------|
+| macOS | `~/.cursor/mcp.json` |
+| Windows | `%USERPROFILE%\.cursor\mcp.json` |
+
+```json
+{
+  "mcpServers": {
+    "YOUR_MASKED_ID": {
+      "transport": "http",
+      "url": "https://gateway.mewcp.com/YOUR_MASKED_ID/mcp",
+      "headers": {
+        "Authorization": "Bearer MEWCP_KEY"
+      }
+    }
+  }
+}
+```
+
+With a credential:
+
+```json
+{
+  "mcpServers": {
+    "YOUR_MASKED_ID": {
+      "transport": "http",
+      "url": "https://gateway.mewcp.com/YOUR_MASKED_ID/mcp",
+      "headers": {
+        "Authorization": "Bearer MEWCP_KEY",
+        "x-mewcp-credential-id": "YOUR_CREDENTIAL_ID"
+      }
+    }
+  }
+}
+```
+
+Restart Cursor. The server will be available in Agent mode.
+
+---
+
+## Try it
+
+If you connected the **Web Scraper** server, open Copilot Chat or Cursor Agent and type:
+
+```
+Use the scrape tool to fetch https://mewcp.com and tell me the page title.
+```
+
+---
+
+## Where to find your values
+
+| Value | Where to get it |
+|-------|----------------|
+| `YOUR_MASKED_ID` | Dashboard -> your subscribed server -> server detail page |
+| `MEWCP_KEY` | Dashboard -> Credentials -> MewCP Keys |
+| `YOUR_CREDENTIAL_ID` | Dashboard -> Credentials -> click the credential -> copy ID |

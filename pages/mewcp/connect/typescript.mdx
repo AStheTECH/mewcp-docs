@@ -1,0 +1,80 @@
+---
+title: TypeScript MCP Client
+description: Connect to MewCP from a TypeScript or Node.js application.
+---
+
+## Install
+
+```bash
+npm install @modelcontextprotocol/sdk
+```
+
+---
+
+## Example
+
+```typescript
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+
+const GATEWAY_URL = "https://gateway.mewcp.com/YOUR_MASKED_ID/mcp";
+const MEWCP_KEY = "YOUR_MEWCP_KEY";
+const CREDENTIAL_ID = "YOUR_CREDENTIAL_ID";
+
+const transport = new StreamableHTTPClientTransport(new URL(GATEWAY_URL), {
+  requestInit: {
+    headers: {
+      Authorization: `Bearer ${MEWCP_KEY}`,
+      "x-mewcp-credential-id": CREDENTIAL_ID,
+      Accept: "application/json, text/event-stream",
+    },
+  },
+});
+
+const client = new Client({
+  name: "my-node-client",
+  version: "1.0.0",
+});
+
+await client.connect(transport);
+
+const tools = await client.listTools();
+console.log("Available tools:", tools.tools.map((t) => t.name));
+
+// Call the scrape tool
+const result = await client.callTool({
+  name: "scrape",
+  arguments: { url: "https://mewcp.com" },
+});
+console.log(result);
+```
+
+---
+
+## B2B: audience member credential routing
+
+If you are managing audience member credentials via the [MewCP Auth API](/mewcp-auth),
+pass the user's ID instead of a credential ID:
+
+```typescript
+const transport = new StreamableHTTPClientTransport(new URL(GATEWAY_URL), {
+  requestInit: {
+    headers: {
+      Authorization: `Bearer ${MEWCP_KEY}`,
+      "x-external-user-id": currentUser.id,
+    },
+  },
+});
+```
+
+MewCP resolves the stored credential for that user automatically.
+
+---
+
+## Where to find your values
+
+| Value | Where to get it |
+|-------|----------------|
+| `YOUR_MASKED_ID` | Dashboard -> your subscribed server -> server detail page |
+| `YOUR_MEWCP_KEY` | Dashboard -> Credentials -> MewCP Keys |
+| `YOUR_CREDENTIAL_ID` | Dashboard -> Credentials -> click the credential -> copy ID |

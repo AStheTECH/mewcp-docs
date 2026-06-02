@@ -1,0 +1,58 @@
+---
+title: OpenAI Codex
+description: Connect MewCP to the OpenAI Codex CLI.
+---
+
+## Prerequisites
+
+- Codex CLI installed: `npm install -g @openai/codex`
+- A MewCP Key - see [Authentication](/mewcp/authentication)
+
+---
+
+## Configuration
+
+Add your MewCP server to `~/.codex/config.yaml`:
+
+```yaml
+mcpServers:
+  YOUR_MASKED_ID:
+    type: sse
+    url: https://gateway.mewcp.com/YOUR_MASKED_ID/mcp
+    headers:
+      Authorization: "Bearer MEWCP_KEY"
+```
+
+With a credential:
+
+```yaml
+mcpServers:
+  YOUR_MASKED_ID:
+    type: sse
+    url: https://gateway.mewcp.com/YOUR_MASKED_ID/mcp
+    headers:
+      Authorization: "Bearer MEWCP_KEY"
+      x-mewcp-credential-id: "YOUR_CREDENTIAL_ID"
+```
+
+The server will be available on the next `codex` invocation.
+
+---
+
+## Try it
+
+If you connected the **Web Scraper** server, run:
+
+```bash
+codex "Use the scrape tool to fetch https://mewcp.com and return the page title"
+```
+
+---
+
+## Where to find your values
+
+| Value | Where to get it |
+|-------|----------------|
+| `YOUR_MASKED_ID` | Dashboard -> your subscribed server -> server detail page |
+| `MEWCP_KEY` | Dashboard -> Credentials -> MewCP Keys |
+| `YOUR_CREDENTIAL_ID` | Dashboard -> Credentials -> click the credential -> copy ID |

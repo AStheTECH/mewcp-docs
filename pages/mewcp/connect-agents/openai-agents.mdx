@@ -1,0 +1,89 @@
+---
+title: OpenAI Agents SDK
+description: Connect MewCP to an OpenAI Agents SDK agent.
+---
+
+## Install
+
+```bash
+pip install openai-agents
+```
+
+---
+
+## Connect and call a tool
+
+```python
+import asyncio
+from agents.mcp import MCPServerStreamableHttp
+
+MASKED_ID = "YOUR_MASKED_ID"
+MEWCP_KEY = "YOUR_MEWCP_KEY"
+
+async def main():
+    async with MCPServerStreamableHttp(
+        name="mewcp",
+        params={
+            "url": f"https://gateway.mewcp.com/{MASKED_ID}/mcp",
+            "headers": {
+                "Authorization": f"Bearer {MEWCP_KEY}",
+                "x-mewcp-credential-id": "YOUR_CREDENTIAL_ID",
+            },
+            "timeout": 30,
+        },
+        cache_tools_list=True,
+    ) as server:
+        tools = await server.list_tools()
+        print("Available tools:", [t.name for t in tools])
+
+        # Call the scrape tool directly
+        result = await server.call_tool(
+            tool_name="scrape",
+            arguments={"url": "https://mewcp.com"},
+        )
+        print(result.content)
+
+asyncio.run(main())
+```
+
+---
+
+## Use with an agent
+
+```python
+import asyncio
+from agents import Agent, Runner
+from agents.mcp import MCPServerStreamableHttp
+
+async def main():
+    async with MCPServerStreamableHttp(
+        name="mewcp",
+        params={
+            "url": f"https://gateway.mewcp.com/{MASKED_ID}/mcp",
+            "headers": {"Authorization": f"Bearer {MEWCP_KEY}"},
+        },
+    ) as server:
+        agent = Agent(
+            name="Web Agent",
+            instructions="You are a helpful web research assistant.",
+            mcp_servers=[server],
+        )
+
+        result = await Runner.run(
+            agent,
+            "Scrape https://mewcp.com and summarize the content.",
+        )
+        print(result.final_output)
+
+asyncio.run(main())
+```
+
+---
+
+## Where to find your values
+
+| Value | Where to get it |
+|-------|----------------|
+| `YOUR_MASKED_ID` | Dashboard -> your subscribed server -> server detail page |
+| `YOUR_MEWCP_KEY` | Dashboard -> Credentials -> MewCP Keys |
+| `YOUR_CREDENTIAL_ID` | Dashboard -> Credentials -> click the credential -> copy ID |

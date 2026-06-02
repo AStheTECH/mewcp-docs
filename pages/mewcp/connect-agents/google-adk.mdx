@@ -1,0 +1,103 @@
+---
+title: Google ADK
+description: Connect MewCP to a Google Agent Development Kit agent.
+---
+
+## Install
+
+```bash
+pip install google-adk
+```
+
+---
+
+## Connect and call a tool
+
+```python
+import asyncio
+from google.adk.tools.mcp_tool import MCPToolset
+from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
+
+MASKED_ID = "YOUR_MASKED_ID"
+MEWCP_KEY = "YOUR_MEWCP_KEY"
+
+async def main():
+    toolset = MCPToolset(
+        connection_params=StreamableHTTPConnectionParams(
+            url=f"https://gateway.mewcp.com/{MASKED_ID}/mcp",
+            headers={
+                "Authorization": f"Bearer {MEWCP_KEY}",
+                "x-mewcp-credential-id": "YOUR_CREDENTIAL_ID",
+            },
+        )
+    )
+
+    tools = await toolset.get_tools()
+    print("Available tools:", [t.name for t in tools])
+
+    # Call the scrape tool
+    scrape_tool = next(t for t in tools if t.name == "scrape")
+    result = await scrape_tool.run_async(
+        args={"url": "https://mewcp.com"},
+        tool_context=None,
+    )
+    print(result)
+
+    await toolset.close()
+
+asyncio.run(main())
+```
+
+---
+
+## Use with an LLM agent
+
+Pass the toolset to an `LlmAgent` and ADK calls tools automatically based on the model's decisions:
+
+```python
+from google.adk.agents import LlmAgent
+from google.adk.tools.mcp_tool import MCPToolset
+from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
+
+toolset = MCPToolset(
+    connection_params=StreamableHTTPConnectionParams(
+        url=f"https://gateway.mewcp.com/{MASKED_ID}/mcp",
+        headers={"Authorization": f"Bearer {MEWCP_KEY}"},
+    )
+)
+
+agent = LlmAgent(
+    model="gemini-2.0-flash",
+    name="web_agent",
+    instruction="You are a helpful web research assistant.",
+    tools=[toolset],
+)
+```
+
+---
+
+## B2B: per-user credential routing
+
+To route MCP calls for different audience, use a `header_provider` callable instead of static headers:
+
+```python
+MCPToolset(
+    connection_params=StreamableHTTPConnectionParams(
+        url=f"https://gateway.mewcp.com/{MASKED_ID}/mcp",
+    ),
+    header_provider=lambda ctx: {
+        "Authorization": f"Bearer {MEWCP_KEY}",
+        "x-external-user-id": ctx.session.state["user_id"],
+    },
+)
+```
+
+---
+
+## Where to find your values
+
+| Value | Where to get it |
+|-------|----------------|
+| `YOUR_MASKED_ID` | Dashboard -> your subscribed server -> server detail page |
+| `YOUR_MEWCP_KEY` | Dashboard -> Credentials -> MewCP Keys |
+| `YOUR_CREDENTIAL_ID` | Dashboard -> Credentials -> click the credential -> copy ID |

@@ -1,0 +1,75 @@
+---
+title: Account API Keys
+description: Keys for programmatic access to MewCP management APIs from your backend.
+---
+
+An **Account API Key** authenticates programmatic calls to MewCP's management APIs. Your backend uses this key to start OAuth flows for audience, get hosted credential form URLs, and manage audience member credential state via the [MewCP Auth API](/mewcp-auth).
+
+---
+
+## Format
+
+```
+mewcp_acct_<hex token>
+```
+
+Example: `mewcp_acct_7df44e73e8cd42bbf4860ffc66520efb62d973615dc2c0f7fb5607fb82d75b53`
+
+---
+
+## How to get one
+
+1. Go to **Dashboard -> Developer -> Account API Keys**
+2. Click **Generate Key**, give it a label, and copy the key
+
+---
+
+## How to use it
+
+Pass it as a Bearer token in the `Authorization` header:
+
+```bash
+curl https://gateway.mewcp.com/audience \
+  -H "Authorization: Bearer mewcp_acct_YOUR_KEY"
+```
+
+TypeScript:
+
+```typescript
+const res = await fetch("https://gateway.mewcp.com/audience", {
+  headers: { Authorization: `Bearer ${process.env.MEWCP_ACCOUNT_KEY}` },
+});
+```
+
+Python:
+
+```python
+import httpx
+resp = httpx.get(
+    "https://gateway.mewcp.com/audience",
+    headers={"Authorization": f"Bearer {MEWCP_ACCOUNT_KEY}"},
+)
+```
+
+---
+
+## What you can do with it
+
+| Action | Endpoint |
+|--------|----------|
+| Start OAuth flow for a user | `POST /oauth/{provider}/start` |
+| Get hosted static credential form | `POST /credentials/static/{providerSlug}/connect` |
+| List your audience | `GET /audience` |
+| Get an audience member's credentials | `GET /audience/{externalUserId}` |
+| Revoke all credentials for a user | `DELETE /audience/{externalUserId}` |
+| Revoke a single credential | `DELETE /audience/{externalUserId}/credentials/{credentialId}` |
+
+Full reference in the [MewCP Auth API](/mewcp-auth) docs.
+
+---
+
+## Best practices
+
+- **Keep it server-side only.** Never expose Account API Keys in frontend code or mobile apps.
+- **One key per environment.** Use separate keys for production, staging, and local development.
+- **Revoke if compromised.** Go to **Developer -> Account API Keys** and click **Revoke**.
