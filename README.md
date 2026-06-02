@@ -1,29 +1,49 @@
-# Zudoku App
+# MewCP Docs
 
-This Zudoku app that was created with [`create-zudoku`](https://zudoku.dev/docs).
+Official documentation site for [MewCP](https://mewcp.com) — a managed MCP (Model Context Protocol) gateway.
 
-## Getting Started
+Built with [Zudoku](https://zudoku.dev).
 
-First, run the development server:
+## Structure
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+```
+pages/
+  mewcp/              # Main documentation
+    getting-started   # Tutorial
+    connect/          # Client connection guides
+    connect-agents/   # AI agent framework guides
+    authentication/   # MewCP Key and Account API Keys
+apis/
+  mewcp-auth.yaml     # OpenAPI spec for the MewCP Auth API
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Development
 
-You can start editing the page by modifying `pages/intro.mdx`. You will see the content
-automatically update as you save the file.
+```bash
+npm install
+npm run dev
+```
 
-## Learn More
+## Build
 
-To learn more about Zudoku, you can visit the [Zudoku documentation](https://zudoku.dev/docs).
+```bash
+npm run build
+```
 
-To connect with the community join the
-[GitHub Discussions](https://github.com/zuplo/zudoku/discussions) or
-[Discord](https://discord.zudoku.dev).
-# mewcp-docs
+Search (pagefind) is indexed at build time. To preview with search working:
+
+```bash
+npm run build && npm run preview
+```
+
+## Adding content
+
+- **Guides**: Add `.mdx` files under `pages/mewcp/`
+- **API reference**: Edit `apis/mewcp-auth.yaml`
+- **Navigation**: Update `zudoku.config.tsx`
+
+## Tech
+
+- [Zudoku](https://zudoku.dev) — docs framework
+- [Pagefind](https://pagefind.app) — static search
+- [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0) — API reference spec
