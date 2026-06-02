@@ -315,7 +315,7 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
-  /audience:
+  /end-users:
     get:
       operationId: listEndUsers
       summary: List audience
@@ -341,7 +341,7 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
-  /audience/{externalUserId}:
+  /end-users/{externalUserId}:
     get:
       operationId: getEndUser
       summary: Get audience member details
@@ -397,7 +397,7 @@ paths:
         to make MCP calls until they reconnect.
 
         This is a cascade operation and revokes all providers at once. To revoke a single
-        credential, use `DELETE /audience/{externalUserId}/credentials/{credentialId}`.
+        credential, use `DELETE /end-users/{externalUserId}/credentials/{credentialId}`.
       tags: [Audience]
       parameters:
         - in: path
@@ -427,7 +427,7 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
-  /audience/{externalUserId}/credentials/{credentialId}:
+  /end-users/{externalUserId}/credentials/{credentialId}:
     delete:
       operationId: revokeEndUserCredential
       summary: Revoke a single audience member credential

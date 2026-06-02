@@ -29,14 +29,14 @@ Example: `mewcp_acct_7df44e73e8cd42bbf4860ffc66520efb62d973615dc2c0f7fb5607fb82d
 Pass it as a Bearer token in the `Authorization` header:
 
 ```bash
-curl https://gateway.mewcp.com/audience \
+curl https://gateway.mewcp.com/end-users \
   -H "Authorization: Bearer mewcp_acct_YOUR_KEY"
 ```
 
 TypeScript:
 
 ```typescript
-const res = await fetch("https://gateway.mewcp.com/audience", {
+const res = await fetch("https://gateway.mewcp.com/end-users", {
   headers: { Authorization: `Bearer ${process.env.MEWCP_ACCOUNT_KEY}` },
 });
 ```
@@ -46,7 +46,7 @@ Python:
 ```python
 import httpx
 resp = httpx.get(
-    "https://gateway.mewcp.com/audience",
+    "https://gateway.mewcp.com/end-users",
     headers={"Authorization": f"Bearer {MEWCP_ACCOUNT_KEY}"},
 )
 ```
@@ -59,10 +59,10 @@ resp = httpx.get(
 |--------|----------|
 | Start OAuth flow for a user | `POST /oauth/{provider}/start` |
 | Get hosted static credential form | `POST /credentials/static/{providerSlug}/connect` |
-| List your audience | `GET /audience` |
-| Get an audience member's credentials | `GET /audience/{externalUserId}` |
-| Revoke all credentials for a user | `DELETE /audience/{externalUserId}` |
-| Revoke a single credential | `DELETE /audience/{externalUserId}/credentials/{credentialId}` |
+| List your audience | `GET /end-users` |
+| Get an audience member's credentials | `GET /end-users/{externalUserId}` |
+| Revoke all credentials for a user | `DELETE /end-users/{externalUserId}` |
+| Revoke a single credential | `DELETE /end-users/{externalUserId}/credentials/{credentialId}` |
 
 Full reference in the [MewCP Auth API](/mewcp-auth) docs.
 
