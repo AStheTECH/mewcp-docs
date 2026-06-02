@@ -26,3 +26,4 @@ To learn more about Zudoku, you can visit the [Zudoku documentation](https://zud
 To connect with the community join the
 [GitHub Discussions](https://github.com/zuplo/zudoku/discussions) or
 [Discord](https://discord.zudoku.dev).
+# mewcp-docs
