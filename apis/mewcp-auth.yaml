@@ -38,6 +38,7 @@ info:
   contact:
     name: MewCP Support
     email: contact@asthetech.com
+    url: https://mewcp.com
 
 servers:
   - url: https://gateway.mewcp.com
