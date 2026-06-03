@@ -22,17 +22,17 @@ Add your MewCP server under the `mcp` key. VS Code will prompt you for the key s
     "inputs": [
       {
         "type": "promptString",
-        "id": "YOUR_MASKED_ID",
+        "id": "MCP_SERVER_NAME",
         "description": "MewCP Key",
         "password": true
       }
     ],
     "servers": {
-      "YOUR_MASKED_ID": {
+      "MCP_SERVER_NAME": {
         "type": "http",
-        "url": "https://gateway.mewcp.com/YOUR_MASKED_ID/mcp",
+        "url": "https://gateway.mewcp.com/MCP_SERVER_NAME/mcp",
         "headers": {
-          "Authorization": "Bearer ${input:YOUR_MASKED_ID}"
+          "Authorization": "Bearer ${input:MCP_SERVER_NAME}"
         }
       }
     }
@@ -48,17 +48,17 @@ With a credential:
     "inputs": [
       {
         "type": "promptString",
-        "id": "YOUR_MASKED_ID",
+        "id": "MCP_SERVER_NAME",
         "description": "MewCP Key",
         "password": true
       }
     ],
     "servers": {
-      "YOUR_MASKED_ID": {
+      "MCP_SERVER_NAME": {
         "type": "http",
-        "url": "https://gateway.mewcp.com/YOUR_MASKED_ID/mcp",
+        "url": "https://gateway.mewcp.com/MCP_SERVER_NAME/mcp",
         "headers": {
-          "Authorization": "Bearer ${input:YOUR_MASKED_ID}",
+          "Authorization": "Bearer ${input:MCP_SERVER_NAME}",
           "x-mewcp-credential-id": "YOUR_CREDENTIAL_ID"
         }
       }
@@ -73,17 +73,17 @@ With a credential:
 
 Create or edit your Cursor MCP config file:
 
-| Platform | Path |
-|----------|------|
-| macOS | `~/.cursor/mcp.json` |
-| Windows | `%USERPROFILE%\.cursor\mcp.json` |
+| Platform | Path                             |
+| -------- | -------------------------------- |
+| macOS    | `~/.cursor/mcp.json`             |
+| Windows  | `%USERPROFILE%\.cursor\mcp.json` |
 
 ```json
 {
   "mcpServers": {
-    "YOUR_MASKED_ID": {
+    "MCP_SERVER_NAME": {
       "transport": "http",
-      "url": "https://gateway.mewcp.com/YOUR_MASKED_ID/mcp",
+      "url": "https://gateway.mewcp.com/MCP_SERVER_NAME/mcp",
       "headers": {
         "Authorization": "Bearer MEWCP_KEY"
       }
@@ -97,9 +97,9 @@ With a credential:
 ```json
 {
   "mcpServers": {
-    "YOUR_MASKED_ID": {
+    "MCP_SERVER_NAME": {
       "transport": "http",
-      "url": "https://gateway.mewcp.com/YOUR_MASKED_ID/mcp",
+      "url": "https://gateway.mewcp.com/MCP_SERVER_NAME/mcp",
       "headers": {
         "Authorization": "Bearer MEWCP_KEY",
         "x-mewcp-credential-id": "YOUR_CREDENTIAL_ID"
@@ -125,8 +125,8 @@ Use the scrape tool to fetch https://mewcp.com and tell me the page title.
 
 ## Where to find your values
 
-| Value | Where to get it |
-|-------|----------------|
-| `YOUR_MASKED_ID` | Dashboard -> your subscribed server -> server detail page |
-| `MEWCP_KEY` | Dashboard -> Credentials -> MewCP Keys |
+| Value                | Where to get it                                             |
+| -------------------- | ----------------------------------------------------------- |
+| `MCP_SERVER_NAME`    | Dashboard -> your subscribed server -> server detail page   |
+| `MEWCP_KEY`          | Dashboard -> Credentials -> MewCP Keys                      |
 | `YOUR_CREDENTIAL_ID` | Dashboard -> Credentials -> click the credential -> copy ID |

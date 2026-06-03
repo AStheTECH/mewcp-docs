@@ -15,22 +15,22 @@ description: Connect MewCP to Claude Desktop.
 
 Open your Claude Desktop config file:
 
-| Platform | Path |
-|----------|------|
-| macOS | `~/Library/Application Support/Claude/claude_desktop_config.json` |
-| Windows | `%APPDATA%\Claude\claude_desktop_config.json` |
+| Platform | Path                                                              |
+| -------- | ----------------------------------------------------------------- |
+| macOS    | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| Windows  | `%APPDATA%\Claude\claude_desktop_config.json`                     |
 
 Add your MewCP server under `mcpServers`:
 
 ```json
 {
   "mcpServers": {
-    "YOUR_MASKED_ID": {
+    "MCP_SERVER_NAME": {
       "command": "npx",
       "args": [
         "-y",
         "mcp-remote@latest",
-        "https://gateway.mewcp.com/YOUR_MASKED_ID/mcp",
+        "https://gateway.mewcp.com/MCP_SERVER_NAME/mcp",
         "--header",
         "Authorization: Bearer ${MEWCP_KEY}"
       ],
@@ -47,12 +47,12 @@ If the server requires a credential, add it as an additional header arg:
 ```json
 {
   "mcpServers": {
-    "YOUR_MASKED_ID": {
+    "MCP_SERVER_NAME": {
       "command": "npx",
       "args": [
         "-y",
         "mcp-remote@latest",
-        "https://gateway.mewcp.com/YOUR_MASKED_ID/mcp",
+        "https://gateway.mewcp.com/MCP_SERVER_NAME/mcp",
         "--header",
         "Authorization: Bearer ${MEWCP_KEY}",
         "--header",
@@ -84,8 +84,8 @@ Claude will call the `scrape` tool and return the result.
 
 ## Where to find your values
 
-| Value | Where to get it |
-|-------|----------------|
-| `YOUR_MASKED_ID` | Dashboard -> your subscribed server -> server detail page |
-| `your_key_here` | Dashboard -> Credentials -> MewCP Keys |
+| Value                | Where to get it                                             |
+| -------------------- | ----------------------------------------------------------- |
+| `MCP_SERVER_NAME`    | Dashboard -> your subscribed server -> server detail page   |
+| `your_key_here`      | Dashboard -> Credentials -> MewCP Keys                      |
 | `YOUR_CREDENTIAL_ID` | Dashboard -> Credentials -> click the credential -> copy ID |
