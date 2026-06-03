@@ -20,7 +20,7 @@ const config: ZudokuConfig = {
       },
       alt: "MewCP",
       width: "90px",
-      href: "/mewcp/getting-started",
+      href: "https://mewcp.com",
     },
   },
   theme: {
