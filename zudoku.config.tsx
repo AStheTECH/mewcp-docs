@@ -10,7 +10,7 @@ const config: ZudokuConfig = {
           links: [
             {
               label:
-                "Contact us - our dev team will reach out as soon as possible",
+                "✉ Contact us - our dev team will reach out as soon as possible",
               href: "mailto:contact@asthetech.com",
             },
           ],
@@ -89,7 +89,7 @@ const config: ZudokuConfig = {
     navigation: [
       {
         label: "AstheTech",
-        icon: "code-2",
+        icon: "external-link",
         to: "https://github.com/asthetech",
         target: "_blank",
       },
