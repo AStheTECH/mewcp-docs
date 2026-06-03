@@ -20,7 +20,7 @@ MCP servers for providers like **Google, Slack, GitHub, Notion**, and others use
 
 Register your OAuth app credentials in the MewCP dashboard:
 
-1. Go to **Dashboard → Credentials → OAuth Apps**
+1. Go to **Dashboard → Credentials → Select Server → Connect More**
 2. Add your `client_id` and `client_secret` from the provider (e.g. from Google Cloud Console, Slack API, GitHub OAuth Apps)
 3. Set the redirect URI to `https://gateway.mewcp.com/oauth/callback`
 
@@ -32,7 +32,7 @@ You only do this once per provider.
 
 ### Step 1 - Start the OAuth flow
 
-Call `POST /oauth/{provider}/start` from your backend with the user's ID and, if you have a frontend, a callback URL:
+Call `POST /oauth/{provider}/start` from your backend. Pass the user's ID and, if you have a frontend, a callback URL. You can also pass optional user metadata — MewCP stores it alongside the credential for display in your dashboard:
 
 ```http
 POST /oauth/google/start
@@ -40,9 +40,22 @@ Authorization: Bearer mewcp_acct_YOUR_KEY
 
 {
   "externalUserId": "user_123",
-  "frontendCallbackUrl": "https://yourapp.com/oauth/callback"
+  "frontendCallbackUrl": "https://yourapp.com/oauth/callback",
+  "externalUserMeta": {
+    "name": "Jane Smith",
+    "email": "jane@example.com",
+    "username": "janesmith"
+  }
 }
 ```
+
+| Field                       | Required | Description                                          |
+| --------------------------- | -------- | ---------------------------------------------------- |
+| `externalUserId`            | Yes      | Your internal user identifier                        |
+| `frontendCallbackUrl`       | No       | Where MewCP redirects the user after OAuth completes |
+| `externalUserMeta.name`     | No       | User's display name, stored for your reference       |
+| `externalUserMeta.email`    | No       | User's email, stored for your reference              |
+| `externalUserMeta.username` | No       | User's username, stored for your reference           |
 
 You get back:
 
@@ -53,7 +66,7 @@ You get back:
 }
 ```
 
-The `state` value is internal - MewCP uses it to verify the callback. You do not need to store or validate it.
+The `state` value is internal — MewCP uses it to verify the callback. You do not need to store or validate it.
 
 ---
 
@@ -61,26 +74,71 @@ The `state` value is internal - MewCP uses it to verify the callback. You do not
 
 **If you have a frontend (web app):**
 
-Open the URL as a popup window - the same pattern every OAuth login uses:
+Open the URL as a popup — the standard OAuth pattern. The popup must be opened from a user action (e.g. a button click), otherwise browsers will block it.
 
 ```js
-window.open(authUrl, "mewcp-oauth", "width=500,height=650");
+// Open the popup on button click
+const popup = window.open(authUrl, "mewcp-oauth", "width=500,height=650");
+
+// Listen for the result message from your callback page
+window.addEventListener("message", (event) => {
+  if (event.origin !== window.location.origin) return;
+  const { provider, success, error } = event.data;
+  if (success) {
+    // OAuth completed - update your UI
+    console.log(`${provider} connected`);
+  } else if (error) {
+    console.error("OAuth failed:", error);
+  }
+});
 ```
 
-After the user logs in, MewCP redirects the popup to your `frontendCallbackUrl` with query parameters:
+After the user logs in, MewCP redirects the popup to your `frontendCallbackUrl`:
 
-| Result  | URL                                                               |
-| ------- | ----------------------------------------------------------------- |
-| Success | `https://yourapp.com/oauth/callback?provider=google&success=true` |
-| Error   | `https://yourapp.com/oauth/callback?oauth_error=<message>`        |
+| Result  | Query params on your callback URL |
+| ------- | --------------------------------- |
+| Success | `?provider=google&success=true`   |
+| Error   | `?oauth_error=<message>`          |
 
-Listen for the redirect in your frontend to update your UI accordingly.
+Your callback page needs to forward this result to the parent window and close the popup:
+
+```js
+// On your frontendCallbackUrl page
+const params = new URLSearchParams(window.location.search);
+window.opener?.postMessage(
+  {
+    provider: params.get("provider"),
+    success: params.get("success") === "true",
+    error: params.get("oauth_error") ?? null,
+  },
+  window.location.origin,
+);
+window.close();
+```
+
+---
+
+**If you prefer a full redirect (no popup):**
+
+Instead of opening a popup, redirect the user directly to the `authUrl`. After OAuth completes, MewCP redirects them back to your `frontendCallbackUrl`. Handle the result there as a normal page load:
+
+```js
+window.location.href = authUrl;
+```
+
+```js
+// On your frontendCallbackUrl page
+const params = new URLSearchParams(window.location.search);
+if (params.get("success") === "true") {
+  // show success, redirect to dashboard, etc.
+}
+```
 
 ---
 
 **If you have no frontend (local tools / server-only setups):**
 
-Simply open the `authUrl` in a browser, log in, and you're done. MewCP will show a **"Connected"** confirmation page with a close button. The credential is saved automatically - no further action needed.
+Simply open the `authUrl` in a browser, log in, and you're done. MewCP will show a **"Connected"** confirmation page with a close button. The credential is saved automatically — no further action needed.
 
 ---
 
@@ -99,6 +157,6 @@ MewCP resolves the stored credential and makes the authenticated call on their b
 ## Security
 
 - Access tokens and refresh tokens are **encrypted at rest** in MewCP's vault
-- Your backend never receives or stores raw tokens - only an opaque `externalUserId` reference
+- Your backend never need to handles raw credentials - only an opaque `externalUserId` reference
 - Token refresh happens server-side, automatically, before expiry
 - You can revoke a user's credential at any time via the [Audience API](/mewcp-auth#tag/Audience)
