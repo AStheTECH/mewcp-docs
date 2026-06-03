@@ -117,6 +117,15 @@ const config: ZudokuConfig = {
             "/mewcp/authentication/account-api-keys",
           ],
         },
+        {
+          type: "category",
+          label: "Auth API Guides",
+          icon: "shield",
+          items: [
+            "/mewcp/auth-api/oauth-integration",
+            "/mewcp/auth-api/static-credentials",
+          ],
+        },
       ],
     },
     {

@@ -1,0 +1,104 @@
+---
+title: OAuth Integration Guide
+description: How to integrate MewCP's OAuth flow so your users can connect providers like Google, Slack, and GitHub to your application.
+---
+
+MCP servers for providers like **Google, Slack, GitHub, Notion**, and others use OAuth - the same login flow your users already know ("Sign in with Google"). MewCP handles the entire OAuth lifecycle for you: token exchange, encrypted storage, and automatic refresh. You never touch a raw access token.
+
+---
+
+## What MewCP does for you
+
+- Runs the OAuth handshake with the provider on your behalf
+- Encrypts and stores the access token and refresh token in MewCP's vault
+- Automatically refreshes tokens before they expire - no token management on your side
+- Ties every credential to an `externalUserId` you supply, so you can identify which of your users connected which account
+
+---
+
+## Before you start
+
+Register your OAuth app credentials in the MewCP dashboard:
+
+1. Go to **Dashboard → Credentials → OAuth Apps**
+2. Add your `client_id` and `client_secret` from the provider (e.g. from Google Cloud Console, Slack API, GitHub OAuth Apps)
+3. Set the redirect URI to `https://gateway.mewcp.com/oauth/callback`
+
+You only do this once per provider.
+
+---
+
+## Integration flow
+
+### Step 1 - Start the OAuth flow
+
+Call `POST /oauth/{provider}/start` from your backend with the user's ID and, if you have a frontend, a callback URL:
+
+```http
+POST /oauth/google/start
+Authorization: Bearer mewcp_acct_YOUR_KEY
+
+{
+  "externalUserId": "user_123",
+  "frontendCallbackUrl": "https://yourapp.com/oauth/callback"
+}
+```
+
+You get back:
+
+```json
+{
+  "authUrl": "https://accounts.google.com/o/oauth2/auth?client_id=...",
+  "state": "a3f9..."
+}
+```
+
+The `state` value is internal - MewCP uses it to verify the callback. You do not need to store or validate it.
+
+---
+
+### Step 2 - Open the auth URL for your user
+
+**If you have a frontend (web app):**
+
+Open the URL as a popup window - the same pattern every OAuth login uses:
+
+```js
+window.open(authUrl, "mewcp-oauth", "width=500,height=650");
+```
+
+After the user logs in, MewCP redirects the popup to your `frontendCallbackUrl` with query parameters:
+
+| Result  | URL                                                               |
+| ------- | ----------------------------------------------------------------- |
+| Success | `https://yourapp.com/oauth/callback?provider=google&success=true` |
+| Error   | `https://yourapp.com/oauth/callback?oauth_error=<message>`        |
+
+Listen for the redirect in your frontend to update your UI accordingly.
+
+---
+
+**If you have no frontend (local tools / server-only setups):**
+
+Simply open the `authUrl` in a browser, log in, and you're done. MewCP will show a **"Connected"** confirmation page with a close button. The credential is saved automatically - no further action needed.
+
+---
+
+### Step 3 - Use the connection
+
+Once connected, route your user's MCP requests through the gateway with their `externalUserId` in the header:
+
+```http
+x-external-user-id: user_123
+```
+
+MewCP resolves the stored credential and makes the authenticated call on their behalf.
+
+---
+
+## Security
+
+- Access tokens and refresh tokens are **encrypted at rest** in MewCP's vault
+- Your backend never receives or stores raw tokens - only an opaque `externalUserId` reference
+- Token refresh happens server-side, automatically, before expiry
+- You can revoke a user's credential at any time via the [Audience API](/mewcp-auth#tag/Audience)

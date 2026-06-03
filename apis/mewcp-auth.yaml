@@ -6,6 +6,11 @@ info:
 
     B2B API for connecting your audience to MCP-powered tools via OAuth or static credentials.
 
+    MCP servers require two things to work for your users: **hosting** and **credential management**.
+    MewCP provides both. You call this API from your backend, MewCP handles everything else -
+    OAuth handshakes, token storage, automatic refresh, and encrypted credential vaults.
+    Your users connect their accounts; your backend only ever holds an opaque `externalUserId`.
+
     ## Authentication
 
     All endpoints require an **Account API Key** passed as a Bearer token:
@@ -16,23 +21,36 @@ info:
 
     Generate an Account API Key from your MewCP dashboard under **Developer -> Account API Keys**.
 
-    ## Overview
+    ## OAuth vs Static Credentials
 
-    The MewCP Auth API lets you manage audience member credentials so your users can access MCP servers
-    without handling OAuth flows or credential storage themselves. Your backend initiates flows,
-    MewCP handles the credential lifecycle.
+    | | OAuth | Static Credentials |
+    |---|---|---|
+    | **Use when** | Provider supports OAuth (Google, Slack, GitHub, Notion…) | Provider uses API keys or secrets (Gemini, Razorpay, Firecrawl…) |
+    | **User experience** | Standard OAuth popup/redirect login | Hosted form where user pastes their key |
+    | **Token refresh** | Automatic - MewCP refreshes before expiry | Not applicable |
+    | **Your backend stores** | Nothing - only `externalUserId` | Nothing - only `externalUserId` |
 
-    **Typical flow (OAuth):**
-    1. Register your OAuth app in the MewCP dashboard under **Credentials -> OAuth Apps**
-    2. When a user wants to connect, call `POST /oauth/{provider}/start` with their `externalUserId`
-    3. Redirect the user to the returned `authUrl`
-    4. MewCP stores the credential. Subsequent MCP calls include `x-external-user-id: {externalUserId}`
+    ## Integration guides
 
-    **Typical flow (static credentials):**
-    1. Call `POST /credentials/static/{providerSlug}/connect` with the user's `externalUserId`
-    2. Send the returned `hostedFormUrl` to your user (email, redirect, in-app link)
-    3. User fills in their API key or token on MewCP's hosted page
-    4. MewCP stores the credential. Subsequent MCP calls include `x-external-user-id: {externalUserId}`
+    For step-by-step integration instructions, including frontend popup setup, local testing flows,
+    and how to handle success/error callbacks, see the dedicated guides:
+
+    - [OAuth Integration Guide](/mewcp/auth-api/oauth-integration)
+    - [Static Credentials Integration Guide](/mewcp/auth-api/static-credentials)
+
+    ## Quick reference
+
+    **OAuth flow:**
+    1. Register your OAuth app in the MewCP dashboard under **Credentials → OAuth Apps**
+    2. Call `POST /oauth/{provider}/start` with `externalUserId` (+ optional `frontendCallbackUrl`)
+    3. Open the returned `authUrl` for your user - as a popup or direct browser open
+    4. MewCP completes the handshake, encrypts and stores the tokens
+
+    **Static credentials flow:**
+    1. Call `POST /credentials/static/{providerSlug}/connect` with `externalUserId` (+ optional `frontendCallbackUrl`)
+    2. Send the returned `hostedFormUrl` to your user - it expires in 5 minutes
+    3. User fills in their API key on MewCP's hosted page
+    4. MewCP encrypts and stores the credentials in vault
 
   version: 1.0.0
   contact:
