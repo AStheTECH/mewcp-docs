@@ -181,7 +181,7 @@ paths:
           required: true
           schema:
             type: string
-          description: Provider slug (e.g. `github`, `linear`, `notion`)
+          description: Provider slug (e.g. `Google`, `github`, `Slack`,  `notion`)
           example: github
       requestBody:
         required: true
