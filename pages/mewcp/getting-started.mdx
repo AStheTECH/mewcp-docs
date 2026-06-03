@@ -10,6 +10,7 @@ By the end of this tutorial you will have Claude Desktop connected to MewCP's **
 **Time:** about 5 minutes.
 
 **What you need:**
+
 - A MewCP account ([sign up](https://mewcp.com))
 - Claude Desktop installed ([download](https://claude.ai/download))
 - Node.js installed (needed by the `mcp-remote` bridge Claude Desktop uses)
@@ -41,22 +42,22 @@ Keep this key safe. You will put it in the Claude Desktop config next.
 
 Open your Claude Desktop config file:
 
-| Platform | Path |
-|----------|------|
-| macOS | `~/Library/Application Support/Claude/claude_desktop_config.json` |
-| Windows | `%APPDATA%\Claude\claude_desktop_config.json` |
+| Platform | Path                                                              |
+| -------- | ----------------------------------------------------------------- |
+| macOS    | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| Windows  | `%APPDATA%\Claude\claude_desktop_config.json`                     |
 
-Replace `YOUR_MASKED_ID` and `your_key_here` with your actual values:
+Replace `MCP_SERVER_NAME` and `your_key_here` with your actual values:
 
 ```json
 {
   "mcpServers": {
-    "YOUR_MASKED_ID": {
+    "MCP_SERVER_NAME": {
       "command": "npx",
       "args": [
         "-y",
         "mcp-remote@latest",
-        "https://gateway.mewcp.com/YOUR_MASKED_ID/mcp",
+        "https://gateway.mewcp.com/MCP_SERVER_NAME/mcp",
         "--header",
         "Authorization: Bearer ${MEWCP_KEY}"
       ],

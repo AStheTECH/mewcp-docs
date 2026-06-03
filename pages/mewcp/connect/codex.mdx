@@ -16,9 +16,9 @@ Add your MewCP server to `~/.codex/config.yaml`:
 
 ```yaml
 mcpServers:
-  YOUR_MASKED_ID:
+  MCP_SERVER_NAME:
     type: sse
-    url: https://gateway.mewcp.com/YOUR_MASKED_ID/mcp
+    url: https://gateway.mewcp.com/MCP_SERVER_NAME/mcp
     headers:
       Authorization: "Bearer MEWCP_KEY"
 ```
@@ -27,9 +27,9 @@ With a credential:
 
 ```yaml
 mcpServers:
-  YOUR_MASKED_ID:
+  MCP_SERVER_NAME:
     type: sse
-    url: https://gateway.mewcp.com/YOUR_MASKED_ID/mcp
+    url: https://gateway.mewcp.com/MCP_SERVER_NAME/mcp
     headers:
       Authorization: "Bearer MEWCP_KEY"
       x-mewcp-credential-id: "YOUR_CREDENTIAL_ID"
@@ -51,8 +51,8 @@ codex "Use the scrape tool to fetch https://mewcp.com and return the page title"
 
 ## Where to find your values
 
-| Value | Where to get it |
-|-------|----------------|
-| `YOUR_MASKED_ID` | Dashboard -> your subscribed server -> server detail page |
-| `MEWCP_KEY` | Dashboard -> Credentials -> MewCP Keys |
+| Value                | Where to get it                                             |
+| -------------------- | ----------------------------------------------------------- |
+| `MCP_SERVER_NAME`    | Dashboard -> your subscribed server -> server detail page   |
+| `MEWCP_KEY`          | Dashboard -> Credentials -> MewCP Keys                      |
 | `YOUR_CREDENTIAL_ID` | Dashboard -> Credentials -> click the credential -> copy ID |

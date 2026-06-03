@@ -18,7 +18,7 @@ import asyncio
 from google.adk.tools.mcp_tool import MCPToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
 
-MASKED_ID = "YOUR_MASKED_ID"
+MASKED_ID = "MCP_SERVER_NAME"
 MEWCP_KEY = "YOUR_MEWCP_KEY"
 
 async def main():
@@ -96,8 +96,8 @@ MCPToolset(
 
 ## Where to find your values
 
-| Value | Where to get it |
-|-------|----------------|
-| `YOUR_MASKED_ID` | Dashboard -> your subscribed server -> server detail page |
-| `YOUR_MEWCP_KEY` | Dashboard -> Credentials -> MewCP Keys |
+| Value                | Where to get it                                             |
+| -------------------- | ----------------------------------------------------------- |
+| `MCP_SERVER_NAME`    | Dashboard -> your subscribed server -> server detail page   |
+| `YOUR_MEWCP_KEY`     | Dashboard -> Credentials -> MewCP Keys                      |
 | `YOUR_CREDENTIAL_ID` | Dashboard -> Credentials -> click the credential -> copy ID |

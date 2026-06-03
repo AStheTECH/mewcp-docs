@@ -10,7 +10,7 @@ An **Account API Key** authenticates programmatic calls to MewCP's management AP
 ## Format
 
 ```
-mewcp_acct_<hex token>
+mewcp_acct_<hex_token>
 ```
 
 Example: `mewcp_acct_7df44e73e8cd42bbf4860ffc66520efb62d973615dc2c0f7fb5607fb82d75b53`
@@ -55,14 +55,14 @@ resp = httpx.get(
 
 ## What you can do with it
 
-| Action | Endpoint |
-|--------|----------|
-| Start OAuth flow for a user | `POST /oauth/{provider}/start` |
-| Get hosted static credential form | `POST /credentials/static/{providerSlug}/connect` |
-| List your audience | `GET /end-users` |
-| Get an audience member's credentials | `GET /end-users/{externalUserId}` |
-| Revoke all credentials for a user | `DELETE /end-users/{externalUserId}` |
-| Revoke a single credential | `DELETE /end-users/{externalUserId}/credentials/{credentialId}` |
+| Action                               | Endpoint                                                        |
+| ------------------------------------ | --------------------------------------------------------------- |
+| Start OAuth flow for a user          | `POST /oauth/{provider}/start`                                  |
+| Get hosted static credential form    | `POST /credentials/static/{providerSlug}/connect`               |
+| List your audience                   | `GET /end-users`                                                |
+| Get an audience member's credentials | `GET /end-users/{externalUserId}`                               |
+| Revoke all credentials for a user    | `DELETE /end-users/{externalUserId}`                            |
+| Revoke a single credential           | `DELETE /end-users/{externalUserId}/credentials/{credentialId}` |
 
 Full reference in the [MewCP Auth API](/mewcp-auth) docs.
 

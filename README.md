@@ -1,6 +1,6 @@
 # MewCP Docs
 
-Official documentation site for [MewCP](https://mewcp.com) — a managed MCP (Model Context Protocol) gateway.
+Official documentation site for [MewCP](https://mewcp.com) - a managed MCP (Model Context Protocol) gateway.
 
 Built with [Zudoku](https://zudoku.dev).
 
@@ -44,6 +44,6 @@ npm run build && npm run preview
 
 ## Tech
 
-- [Zudoku](https://zudoku.dev) — docs framework
-- [Pagefind](https://pagefind.app) — static search
-- [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0) — API reference spec
+- [Zudoku](https://zudoku.dev) - docs framework
+- [Pagefind](https://pagefind.app) - static search
+- [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0) - API reference spec

@@ -17,7 +17,7 @@ npm install @modelcontextprotocol/sdk
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
-const GATEWAY_URL = "https://gateway.mewcp.com/YOUR_MASKED_ID/mcp";
+const GATEWAY_URL = "https://gateway.mewcp.com/MCP_SERVER_NAME/mcp";
 const MEWCP_KEY = "YOUR_MEWCP_KEY";
 const CREDENTIAL_ID = "YOUR_CREDENTIAL_ID";
 
@@ -39,7 +39,10 @@ const client = new Client({
 await client.connect(transport);
 
 const tools = await client.listTools();
-console.log("Available tools:", tools.tools.map((t) => t.name));
+console.log(
+  "Available tools:",
+  tools.tools.map((t) => t.name),
+);
 
 // Call the scrape tool
 const result = await client.callTool({
@@ -73,8 +76,8 @@ MewCP resolves the stored credential for that user automatically.
 
 ## Where to find your values
 
-| Value | Where to get it |
-|-------|----------------|
-| `YOUR_MASKED_ID` | Dashboard -> your subscribed server -> server detail page |
-| `YOUR_MEWCP_KEY` | Dashboard -> Credentials -> MewCP Keys |
+| Value                | Where to get it                                             |
+| -------------------- | ----------------------------------------------------------- |
+| `MCP_SERVER_NAME`    | Dashboard -> your subscribed server -> server detail page   |
+| `YOUR_MEWCP_KEY`     | Dashboard -> Credentials -> MewCP Keys                      |
 | `YOUR_CREDENTIAL_ID` | Dashboard -> Credentials -> click the credential -> copy ID |

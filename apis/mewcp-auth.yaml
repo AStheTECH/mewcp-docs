@@ -6,6 +6,11 @@ info:
 
     B2B API for connecting your audience to MCP-powered tools via OAuth or static credentials.
 
+    MCP servers require two things to work for your users: **hosting** and **credential management**.
+    MewCP provides both. You call this API from your backend, MewCP handles everything else -
+    OAuth handshakes, token storage, automatic refresh, and encrypted credential vaults.
+    Your users connect their accounts; your backend only ever holds an opaque `externalUserId`.
+
     ## Authentication
 
     All endpoints require an **Account API Key** passed as a Bearer token:
@@ -16,28 +21,42 @@ info:
 
     Generate an Account API Key from your MewCP dashboard under **Developer -> Account API Keys**.
 
-    ## Overview
+    ## OAuth vs Static Credentials
 
-    The MewCP Auth API lets you manage audience member credentials so your users can access MCP servers
-    without handling OAuth flows or credential storage themselves. Your backend initiates flows,
-    MewCP handles the credential lifecycle.
+    | | OAuth | Static Credentials |
+    |---|---|---|
+    | **Use when** | Provider supports OAuth (Google, Slack, GitHub, Notion…) | Provider uses API keys or secrets (Gemini, Razorpay, Firecrawl…) |
+    | **User experience** | Standard OAuth popup/redirect login | Hosted form where user pastes their key |
+    | **Token refresh** | Automatic - MewCP refreshes before expiry | Not applicable |
+    | **Your backend stores** | Nothing - only `externalUserId` | Nothing - only `externalUserId` |
 
-    **Typical flow (OAuth):**
-    1. Register your OAuth app in the MewCP dashboard under **Credentials -> OAuth Apps**
-    2. When a user wants to connect, call `POST /oauth/{provider}/start` with their `externalUserId`
-    3. Redirect the user to the returned `authUrl`
-    4. MewCP stores the credential. Subsequent MCP calls include `x-external-user-id: {externalUserId}`
+    ## Integration guides
 
-    **Typical flow (static credentials):**
-    1. Call `POST /credentials/static/{providerSlug}/connect` with the user's `externalUserId`
-    2. Send the returned `hostedFormUrl` to your user (email, redirect, in-app link)
-    3. User fills in their API key or token on MewCP's hosted page
-    4. MewCP stores the credential. Subsequent MCP calls include `x-external-user-id: {externalUserId}`
+    For step-by-step integration instructions, including frontend popup setup, local testing flows,
+    and how to handle success/error callbacks, see the dedicated guides:
+
+    - [OAuth Integration Guide](/mewcp/auth-api/oauth-integration)
+    - [Static Credentials Integration Guide](/mewcp/auth-api/static-credentials)
+
+    ## Quick reference
+
+    **OAuth flow:**
+    1. Register your OAuth app in the MewCP dashboard under **Credentials → OAuth Apps**
+    2. Call `POST /oauth/{provider}/start` with `externalUserId` (+ optional `frontendCallbackUrl`)
+    3. Open the returned `authUrl` for your user - as a popup or direct browser open
+    4. MewCP completes the handshake, encrypts and stores the tokens
+
+    **Static credentials flow:**
+    1. Call `POST /credentials/static/{providerSlug}/connect` with `externalUserId` (+ optional `frontendCallbackUrl`)
+    2. Send the returned `hostedFormUrl` to your user - it expires in 5 minutes
+    3. User fills in their API key on MewCP's hosted page
+    4. MewCP encrypts and stores the credentials in vault
 
   version: 1.0.0
   contact:
     name: MewCP Support
     email: contact@asthetech.com
+    url: https://mewcp.com
 
 servers:
   - url: https://gateway.mewcp.com
@@ -97,7 +116,7 @@ components:
         credentialId:
           type: string
           description: Unique public credential ID
-          example: cred_01HX7Z
+          example: 9e9c513174def62142b1e621fa8bc98e
         providerSlug:
           type: string
           example: github
@@ -147,12 +166,18 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/Error"
+          example:
+            error: not_found
+            message: End-user not found
     Unauthorized:
       description: Missing or invalid account API key
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/Error"
+          example:
+            error: unauthorized
+            message: Invalid or revoked account API key
     InternalError:
       description: Internal server error
       content:
@@ -181,7 +206,7 @@ paths:
           required: true
           schema:
             type: string
-          description: Provider slug (e.g. `github`, `linear`, `notion`)
+          description: Provider slug (e.g. `Google`, `github`, `Slack`,  `notion`)
           example: github
       requestBody:
         required: true
@@ -221,10 +246,12 @@ paths:
                   authUrl:
                     type: string
                     description: Redirect your audience member to this URL
-                    example: https://github.com/login/oauth/authorize?client_id=...
                   state:
                     type: string
                     description: CSRF state token (managed internally, no action needed)
+              example:
+                authUrl: "https://accounts.google.com/o/oauth2/v2/auth?client_id=YOUR_CLIENT_ID&redirect_uri=https%3A%2F%2Fgateway.mewcp.com%2Foauth%2Fcallback&response_type=code&state=a38a39dfed2e4e6f7ba164a7580d716&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fgmail.modify+openid+email+profile"
+                state: "a38a39dfed2e4e6f7ba164a7580d716"
         "400":
           description: OAuth app not configured or invalid provider
           content:
@@ -304,16 +331,33 @@ paths:
                   hostedFormUrl:
                     type: string
                     description: Send this URL to your user. Expires in 5 minutes.
-                    example: https://gateway.mewcp.com/connect/static?token=eyJ...
                   expiresInMinutes:
                     type: integer
-                    example: 5
+              example:
+                hostedFormUrl: "https://gateway.mewcp.com/connect/static?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ4eHgiLCJwcm92aWRlclNsdWciOiJnZW1pbmkiLCJleHRlcm5hbFVzZXJJZCI6InVzZXJfYWJjMTIzIiwiaWF0IjoxNzgwNDg4MTk4LCJleHAiOjE3ODA0ODg0OTh9.signature"
+                expiresInMinutes: 5
         "400":
-          description: Invalid provider or provider uses OAuth (not static)
+          description: Invalid provider, unknown provider slug, or provider uses OAuth (not static)
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+              examples:
+                invalid_provider:
+                  summary: Provider not found
+                  value:
+                    error: invalid_provider
+                    message: "Unknown provider: razorpay"
+                wrong_auth_type:
+                  summary: Provider uses OAuth, not static credentials
+                  value:
+                    error: invalid_provider
+                    message: "Provider 'google-gmail' uses OAuth, not static credentials"
+                missing_user_id:
+                  summary: externalUserId missing
+                  value:
+                    error: bad_request
+                    message: externalUserId is required
         "401":
           $ref: "#/components/responses/Unauthorized"
 
@@ -337,9 +381,16 @@ paths:
                   meta:
                     name: Jane Smith
                     email: jane@example.com
-                  connectedProviders: [github, linear]
+                  connectedProviders: [gemini, google-gmail]
                   credentialCount: 2
-                  lastUpdated: "2025-06-01T10:00:00Z"
+                  lastUpdated: "2026-06-03T12:04:17.154Z"
+                - externalUserId: user_abc456
+                  meta:
+                    name: John Doe
+                    email: john@example.com
+                  connectedProviders: [google-gmail]
+                  credentialCount: 1
+                  lastUpdated: "2026-06-01T08:15:51.445Z"
         "401":
           $ref: "#/components/responses/Unauthorized"
 
@@ -380,11 +431,23 @@ paths:
                   name: Jane Smith
                   email: jane@example.com
                 credentials:
-                  - credentialId: cred_01HX7Z
-                    providerSlug: github
-                    label: janesmith
+                  - credentialId: 8cf89a9e5054754dc3941057202aed85
+                    providerSlug: google-gmail
+                    label: jane@example.com
                     authType: oauth
-                    scopes: [repo, read:user]
+                    scopes:
+                      - https://www.googleapis.com/auth/gmail.modify
+                      - https://www.googleapis.com/auth/gmail.readonly
+                      - https://www.googleapis.com/auth/gmail.send
+                      - openid
+                      - email
+                      - profile
+                    expiresAt: "2026-06-03T12:58:54.185Z"
+                  - credentialId: 9e9c513174def62142b1e621fa8bc98e
+                    providerSlug: gemini
+                    label: "Gemini - user_abc123"
+                    authType: static
+                    scopes: []
                     expiresAt: null
         "404":
           $ref: "#/components/responses/NotFound"
@@ -448,7 +511,7 @@ paths:
           schema:
             type: string
           description: Credential ID returned by the list or get audience member endpoints
-          example: cred_01HX7Z
+          example: 9e9c513174def62142b1e621fa8bc98e
       responses:
         "200":
           description: Credential revoked
@@ -463,7 +526,7 @@ paths:
                     type: string
               example:
                 success: true
-                credentialId: cred_01HX7Z
+                credentialId: 9e9c513174def62142b1e621fa8bc98e
         "404":
           $ref: "#/components/responses/NotFound"
         "401":

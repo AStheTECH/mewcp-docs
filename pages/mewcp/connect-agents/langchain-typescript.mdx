@@ -16,7 +16,7 @@ npm install @langchain/mcp-adapters
 ```typescript
 import { MultiServerMCPClient } from "@langchain/mcp-adapters";
 
-const MASKED_ID = "YOUR_MASKED_ID";
+const MASKED_ID = "MCP_SERVER_NAME";
 const MEWCP_KEY = "YOUR_MEWCP_KEY";
 
 async function main() {
@@ -33,7 +33,10 @@ async function main() {
   });
 
   const tools = await client.getTools();
-  console.log("Available tools:", tools.map((t) => t.name));
+  console.log(
+    "Available tools:",
+    tools.map((t) => t.name),
+  );
 
   // Call the scrape tool directly
   const scrapeTool = tools.find((t) => t.name === "scrape")!;
@@ -85,8 +88,8 @@ main();
 
 ## Where to find your values
 
-| Value | Where to get it |
-|-------|----------------|
-| `YOUR_MASKED_ID` | Dashboard -> your subscribed server -> server detail page |
-| `YOUR_MEWCP_KEY` | Dashboard -> Credentials -> MewCP Keys |
+| Value                | Where to get it                                             |
+| -------------------- | ----------------------------------------------------------- |
+| `MCP_SERVER_NAME`    | Dashboard -> your subscribed server -> server detail page   |
+| `YOUR_MEWCP_KEY`     | Dashboard -> Credentials -> MewCP Keys                      |
 | `YOUR_CREDENTIAL_ID` | Dashboard -> Credentials -> click the credential -> copy ID |
