@@ -18,13 +18,11 @@ MCP servers for providers like **Google, Slack, GitHub, Notion**, and others use
 
 ## Before you start
 
-Register your OAuth app credentials in the MewCP dashboard:
+1. **Add the MCP server to your subscription** - the provider (e.g. `google`, `github`) must be an active server in your MewCP subscription. If it isn't, the API returns `403`. Do this from **Dashboard → Add Server**.
 
-1. Go to **Dashboard → Credentials → Select Server → Connect More**
-2. Add your `client_id` and `client_secret` from the provider (e.g. from Google Cloud Console, Slack API, GitHub OAuth Apps)
-3. Set the redirect URI to `https://gateway.mewcp.com/oauth/callback`
+2. **Register your OAuth app** — go to **Dashboard → Credentials → Select Server → Connect More**, add your `client_id` and `client_secret` from the provider (e.g. Google Cloud Console, Slack API, GitHub OAuth Apps), and set the redirect URI to `https://gateway.mewcp.com/oauth/callback`.
 
-You only do this once per provider.
+Both steps are done once per provider.
 
 ---
 

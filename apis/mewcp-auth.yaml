@@ -178,6 +178,15 @@ components:
           example:
             error: unauthorized
             message: Invalid or revoked account API key
+    Forbidden:
+      description: Server not in active subscription
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: forbidden
+            message: Server not found or not included in your active subscription
     InternalError:
       description: Internal server error
       content:
@@ -273,6 +282,8 @@ paths:
                     setupRequired: true
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /credentials/static/{providerSlug}/connect:
     post:
@@ -360,6 +371,8 @@ paths:
                     message: externalUserId is required
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /end-users:
     get:
