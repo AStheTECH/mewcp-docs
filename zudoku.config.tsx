@@ -4,6 +4,18 @@ const config: ZudokuConfig = {
   site: {
     footer: {
       position: "center",
+      columns: [
+        {
+          title: "Have a question?",
+          links: [
+            {
+              label:
+                "Contact us - our dev team will reach out as soon as possible",
+              href: "mailto:contact@asthetech.com",
+            },
+          ],
+        },
+      ],
       social: [
         { icon: "github", href: "https://github.com/AStheTECH" },
         { icon: "x", href: "https://x.com/mewcp_ai" },
@@ -73,6 +85,22 @@ const config: ZudokuConfig = {
       "MewCP is a platform that allows you to connect to any LLM and agent, enabling you to build AI-powered applications with ease.",
     favicon: "/favicon.png",
   },
+  header: {
+    navigation: [
+      {
+        label: "AstheTech",
+        icon: "code-2",
+        to: "https://github.com/asthetech",
+        target: "_blank",
+      },
+      {
+        label: "Contact Us",
+        icon: "mail",
+        to: "mailto:contact@asthetech.com",
+        target: "_self",
+      },
+    ],
+  },
   search: {
     type: "pagefind",
   },
@@ -139,7 +167,10 @@ const config: ZudokuConfig = {
     { from: "/", to: "/mewcp/getting-started" },
     { from: "/introduction", to: "/mewcp/getting-started" },
     { from: "/mewcp/mcp-api-keys", to: "/mewcp/authentication/mewcp-key" },
-    { from: "/mewcp/account-api-keys", to: "/mewcp/authentication/account-api-keys" },
+    {
+      from: "/mewcp/account-api-keys",
+      to: "/mewcp/authentication/account-api-keys",
+    },
     { from: "/mewcp/authentication", to: "/mewcp/authentication/mewcp-key" },
   ],
   docs: {
