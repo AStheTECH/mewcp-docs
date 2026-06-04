@@ -22,7 +22,7 @@ Add your MewCP server under the `mcp` key. VS Code will prompt you for the key s
     "inputs": [
       {
         "type": "promptString",
-        "id": "MCP_SERVER_NAME",
+        "id": "MEWCP_KEY",
         "description": "MewCP Key",
         "password": true
       }
@@ -32,7 +32,7 @@ Add your MewCP server under the `mcp` key. VS Code will prompt you for the key s
         "type": "http",
         "url": "https://gateway.mewcp.com/MCP_SERVER_NAME/mcp",
         "headers": {
-          "Authorization": "Bearer ${input:MCP_SERVER_NAME}"
+          "Authorization": "Bearer ${input:MEWCP_KEY}"
         }
       }
     }
@@ -48,7 +48,7 @@ With a credential:
     "inputs": [
       {
         "type": "promptString",
-        "id": "MCP_SERVER_NAME",
+        "id": "MEWCP_KEY",
         "description": "MewCP Key",
         "password": true
       }
@@ -58,7 +58,7 @@ With a credential:
         "type": "http",
         "url": "https://gateway.mewcp.com/MCP_SERVER_NAME/mcp",
         "headers": {
-          "Authorization": "Bearer ${input:MCP_SERVER_NAME}",
+          "Authorization": "Bearer ${input:MEWCP_KEY}",
           "x-mewcp-credential-id": "YOUR_CREDENTIAL_ID"
         }
       }
