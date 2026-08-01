@@ -26,18 +26,22 @@ Example: `mewcp_acct_7df44e73e8cd42bbf4860ffc66520efb62d973615dc2c0f7fb5607fb82d
 
 ## How to use it
 
-Pass it as a Bearer token in the `Authorization` header:
+Pass it as a Bearer token in the `Authorization` header. Every MewCP Auth API endpoint also requires an `x-mewcp-key` header: the MewCP Key of the specific business-mode server you're acting on (see [MewCP Key](/mewcp/authentication/mewcp-key)). The two are not interchangeable and both are required:
 
 ```bash
 curl https://gateway.mewcp.com/end-users \
-  -H "Authorization: Bearer mewcp_acct_YOUR_KEY"
+  -H "Authorization: Bearer mewcp_acct_YOUR_KEY" \
+  -H "x-mewcp-key: mewcp_YOUR_SERVER_KEY"
 ```
 
 TypeScript:
 
 ```typescript
 const res = await fetch("https://gateway.mewcp.com/end-users", {
-  headers: { Authorization: `Bearer ${process.env.MEWCP_ACCOUNT_KEY}` },
+  headers: {
+    Authorization: `Bearer ${process.env.MEWCP_ACCOUNT_KEY}`,
+    "x-mewcp-key": process.env.MEWCP_SERVER_KEY,
+  },
 });
 ```
 
@@ -47,7 +51,10 @@ Python:
 import httpx
 resp = httpx.get(
     "https://gateway.mewcp.com/end-users",
-    headers={"Authorization": f"Bearer {MEWCP_ACCOUNT_KEY}"},
+    headers={
+        "Authorization": f"Bearer {MEWCP_ACCOUNT_KEY}",
+        "x-mewcp-key": MEWCP_SERVER_KEY,
+    },
 )
 ```
 
@@ -55,14 +62,15 @@ resp = httpx.get(
 
 ## What you can do with it
 
-| Action                               | Endpoint                                                        |
-| ------------------------------------ | --------------------------------------------------------------- |
-| Start OAuth flow for a user          | `POST /oauth/{provider}/start`                                  |
-| Get hosted static credential form    | `POST /credentials/static/{providerSlug}/connect`               |
-| List your audience                   | `GET /end-users`                                                |
-| Get an audience member's credentials | `GET /end-users/{externalUserId}`                               |
-| Revoke all credentials for a user    | `DELETE /end-users/{externalUserId}`                            |
-| Revoke a single credential           | `DELETE /end-users/{externalUserId}/credentials/{credentialId}` |
+| Action                               | Endpoint                                           |
+| ------------------------------------ | --------------------------------------------------- |
+| Start OAuth flow for a user          | `POST /oauth/{provider}/start`                     |
+| Get hosted static credential form    | `POST /credentials/static/{providerSlug}/connect`  |
+| List audience for a server           | `GET /end-users`                                   |
+| Get an audience member's credentials | `GET /end-users/{externalUserId}`                  |
+| Revoke a user's credential           | `DELETE /end-users/{externalUserId}`               |
+
+Every action above is scoped to the single server identified by `x-mewcp-key`. There's no call that lists or manages audience across every server at once.
 
 Full reference in the [MewCP Auth API](/mewcp-auth) docs.
 

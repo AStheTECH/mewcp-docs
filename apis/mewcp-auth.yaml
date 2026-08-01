@@ -13,13 +13,26 @@ info:
 
     ## Authentication
 
-    All endpoints require an **Account API Key** passed as a Bearer token:
+    Every endpoint requires an **Account API Key** passed as a Bearer token:
 
     ```
     Authorization: Bearer mewcp_acct_YOUR_KEY
     ```
 
     Generate an Account API Key from your MewCP dashboard under **Developer -> Account API Keys**.
+
+    **Every endpoint also requires an `x-mewcp-key` header** carrying the MewCP Key of the server you're
+    acting on:
+
+    ```
+    Authorization: Bearer mewcp_acct_YOUR_KEY
+    x-mewcp-key: mewcp_YOUR_SERVER_KEY
+    ```
+
+    This is the same MewCP Key used to authenticate MCP client connections (see
+    [MewCP Key](/mewcp/authentication/mewcp-key)), and it must be a **business-mode** server key. For
+    `/oauth/{provider}/start` and `/credentials/static/{providerSlug}/connect` it must also match the
+    `provider`/`providerSlug` in the path. Without it, these endpoints return `401`/`400`.
 
     ## OAuth vs Static Credentials
 
@@ -42,12 +55,12 @@ info:
 
     **OAuth flow:**
     1. Register your OAuth app in the MewCP dashboard under **Credentials → OAuth Apps**
-    2. Call `POST /oauth/{provider}/start` with `externalUserId` (+ optional `frontendCallbackUrl`)
+    2. Call `POST /oauth/{provider}/start` with `externalUserId` (+ optional `frontendCallbackUrl`), sending both your Account API Key (`Authorization`) and the server's MewCP Key (`x-mewcp-key`)
     3. Open the returned `authUrl` for your user - as a popup or direct browser open
     4. MewCP completes the handshake, encrypts and stores the tokens
 
     **Static credentials flow:**
-    1. Call `POST /credentials/static/{providerSlug}/connect` with `externalUserId` (+ optional `frontendCallbackUrl`)
+    1. Call `POST /credentials/static/{providerSlug}/connect` with `externalUserId` (+ optional `frontendCallbackUrl`), sending both your Account API Key (`Authorization`) and the server's MewCP Key (`x-mewcp-key`)
     2. Send the returned `hostedFormUrl` to your user - it expires in 5 minutes
     3. User fills in their API key on MewCP's hosted page
     4. MewCP encrypts and stores the credentials in vault
@@ -78,12 +91,20 @@ tags:
 components:
   securitySchemes:
     AccountApiKey:
-      type: http
-      scheme: bearer
+      type: apiKey
+      in: header
+      name: Authorization
       description: |
-        Account API key with `mewcp_acct_` prefix.
-        Generate one from **Developer -> Account API Keys** in your MewCP dashboard.
-      bearerFormat: mewcp_acct_...
+        Account API key with `mewcp_acct_` prefix, sent as `Authorization: Bearer ACCT_YOUR_KEY`.
+
+    MewcpKey:
+      type: apiKey
+      in: header
+      name: x-mewcp-key
+      description: |
+        The MewCP Key of the specific server you're connecting the user to. Must be a
+        business-mode server key, and must match the `provider`/`providerSlug` in the path.
+        Copy it from **Dashboard (mode=business) -> Servers -> Select server -> Select Key -> Copy Key**.
 
   schemas:
     Error:
@@ -178,6 +199,15 @@ components:
           example:
             error: unauthorized
             message: Invalid or revoked account API key
+    MissingScope:
+      description: Missing or invalid x-mewcp-key (not a business-mode key you own, or none supplied)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: invalid_request
+            message: "Missing or invalid x-mewcp-key: send the MewCP Key of a business-mode server you own"
     Forbidden:
       description: Server not in active subscription
       content:
@@ -203,12 +233,16 @@ paths:
         Generates an authorization URL to redirect your audience member to. After the user
         authorizes, MewCP stores the credential under their `externalUserId`.
 
-        **Prerequisite:** Register an OAuth app for the provider first in the MewCP dashboard
-        under **Credentials -> OAuth Apps**. This step is done once per provider.
+        **Prerequisites:**
+        - Register an OAuth app for the provider and assign it to the server key you'll use: **Dashboard (mode=business) -> Servers -> select server -> Register OAuth Client**.
+        - Requires the `x-mewcp-key` header (see Authentication above): the OAuth app used is always the one assigned to that server key, there is no per-request app selection.
 
         After success, subsequent MCP proxy calls include `x-external-user-id: {externalUserId}`
         in the request headers and MewCP resolves the right credential automatically.
       tags: [OAuth]
+      security:
+        - AccountApiKey: []
+          MewcpKey: []
       parameters:
         - in: path
           name: provider
@@ -217,6 +251,13 @@ paths:
             type: string
           description: Provider slug (e.g. `Google`, `github`, `Slack`,  `notion`)
           example: github
+        - in: header
+          name: x-mewcp-key
+          required: true
+          schema:
+            type: string
+          description: MewCP Key of the business-mode server to connect this user to. Must match `provider`.
+          example: mewcp_7df44e73e8cd42bbf4860ffc66520ef...
       requestBody:
         required: true
         content:
@@ -233,9 +274,6 @@ paths:
                   type: string
                   description: URL to redirect the user to after OAuth completes (receives `?provider=github&success=true`)
                   example: https://yourapp.com/settings/connections/callback
-                appId:
-                  type: string
-                  description: Specific OAuth app ID. Defaults to the registered app for this provider.
                 externalUserMeta:
                   $ref: "#/components/schemas/ExternalUserMeta"
             example:
@@ -262,7 +300,7 @@ paths:
                 authUrl: "https://accounts.google.com/o/oauth2/v2/auth?client_id=YOUR_CLIENT_ID&redirect_uri=https%3A%2F%2Fgateway.mewcp.com%2Foauth%2Fcallback&response_type=code&state=a38a39dfed2e4e6f7ba164a7580d716&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fgmail.modify+openid+email+profile"
                 state: "a38a39dfed2e4e6f7ba164a7580d716"
         "400":
-          description: OAuth app not configured or invalid provider
+          description: OAuth app not configured, invalid provider, or the x-mewcp-key doesn't fit this request
           content:
             application/json:
               schema:
@@ -280,8 +318,33 @@ paths:
                     error: oauth_app_required
                     message: "No OAuth app configured for provider 'github'. Please register your OAuth client credentials in the MewCP dashboard before connecting."
                     setupRequired: true
+                not_business_key:
+                  summary: x-mewcp-key is a personal-mode server key
+                  value:
+                    error: invalid_request
+                    message: "Connecting an end-user (externalUserId) requires a business-mode MCP server key, but the key sent in the x-mewcp-key header is personal-mode key. Create or use a business-mode server key for this instance."
+                provider_mismatch:
+                  summary: x-mewcp-key belongs to a different provider
+                  value:
+                    error: invalid_request
+                    message: "The provided MCP server key is for provider 'slack', not 'github'."
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          description: Missing/invalid Account API key, or missing/invalid x-mewcp-key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                bad_account_key:
+                  summary: Invalid or revoked account API key
+                  value:
+                    error: unauthorized
+                    message: Invalid or revoked account API key
+                bad_mewcp_key:
+                  summary: Missing or invalid x-mewcp-key header
+                  value:
+                    error: unauthorized
+                    message: "Missing or invalid MewCP key in x-mewcp-key header"
         "403":
           $ref: "#/components/responses/Forbidden"
 
@@ -296,9 +359,15 @@ paths:
         Send this URL to your user however you prefer (redirect, email, in-app link).
         When they submit, MewCP stores the credential under their `externalUserId`.
 
+        **Requires the `x-mewcp-key` header** (see Authentication above): this determines
+        which server the credential is stored against.
+
         After success, subsequent MCP proxy calls include `x-external-user-id: {externalUserId}`
         and MewCP resolves the right credential automatically.
       tags: [Static Credentials]
+      security:
+        - AccountApiKey: []
+          MewcpKey: []
       parameters:
         - in: path
           name: providerSlug
@@ -307,6 +376,13 @@ paths:
             type: string
           description: Provider slug for the static credential type
           example: linear
+        - in: header
+          name: x-mewcp-key
+          required: true
+          schema:
+            type: string
+          description: MewCP Key of the business-mode server to connect this user to. Must match `providerSlug`.
+          example: mewcp_7df44e73e8cd42bbf4860ffc66520ef...
       requestBody:
         required: true
         content:
@@ -348,7 +424,7 @@ paths:
                 hostedFormUrl: "https://gateway.mewcp.com/connect/static?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ4eHgiLCJwcm92aWRlclNsdWciOiJnZW1pbmkiLCJleHRlcm5hbFVzZXJJZCI6InVzZXJfYWJjMTIzIiwiaWF0IjoxNzgwNDg4MTk4LCJleHAiOjE3ODA0ODg0OTh9.signature"
                 expiresInMinutes: 5
         "400":
-          description: Invalid provider, unknown provider slug, or provider uses OAuth (not static)
+          description: Invalid provider, unknown provider slug, provider uses OAuth (not static), or the x-mewcp-key doesn't fit this request
           content:
             application/json:
               schema:
@@ -367,19 +443,58 @@ paths:
                 missing_user_id:
                   summary: externalUserId missing
                   value:
-                    error: bad_request
+                    error: invalid_request
                     message: externalUserId is required
+                not_business_key:
+                  summary: x-mewcp-key is a personal-mode server key
+                  value:
+                    error: invalid_request
+                    message: "Connecting an end-user (externalUserId) requires a business-mode MCP server key, but the key sent in the x-mewcp-key header is personal-mode key. Create or use a business-mode server key for this instance."
+                provider_mismatch:
+                  summary: x-mewcp-key belongs to a different provider
+                  value:
+                    error: invalid_request
+                    message: "The provided MCP server key is for provider 'gemini', not 'linear'."
         "401":
-          $ref: "#/components/responses/Unauthorized"
+          description: Missing/invalid Account API key, or missing/invalid x-mewcp-key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                bad_account_key:
+                  summary: Invalid or revoked account API key
+                  value:
+                    error: unauthorized
+                    message: Invalid or revoked account API key
+                bad_mewcp_key:
+                  summary: Missing or invalid x-mewcp-key header
+                  value:
+                    error: unauthorized
+                    message: "Missing or invalid MCP API key in x-mewcp-key header"
         "403":
           $ref: "#/components/responses/Forbidden"
 
   /end-users:
     get:
       operationId: listEndUsers
-      summary: List audience
-      description: Returns all audience that have at least one active credential under your account, sorted by most recently updated.
+      summary: List audience for a server
+      description: |
+        Returns the audience that have at least one active credential under the server identified by `x-mewcp-key`, sorted by most recently updated.
+
+        `Authorization` is your Account API Key; `x-mewcp-key` is that server's own MewCP Key. The two are not interchangeable and both are required.
       tags: [Audience]
+      security:
+        - AccountApiKey: []
+          MewcpKey: []
+      parameters:
+        - in: header
+          name: x-mewcp-key
+          required: true
+          schema:
+            type: string
+          description: MewCP Key of the business-mode server to list audience for.
+          example: mewcp_7df44e73e8cd42bbf4860ffc66520ef...
       responses:
         "200":
           description: List of audience
@@ -394,8 +509,8 @@ paths:
                   meta:
                     name: Jane Smith
                     email: jane@example.com
-                  connectedProviders: [gemini, google-gmail]
-                  credentialCount: 2
+                  connectedProviders: [google-gmail]
+                  credentialCount: 1
                   lastUpdated: "2026-06-03T12:04:17.154Z"
                 - externalUserId: user_abc456
                   meta:
@@ -404,6 +519,8 @@ paths:
                   connectedProviders: [google-gmail]
                   credentialCount: 1
                   lastUpdated: "2026-06-01T08:15:51.445Z"
+        "400":
+          $ref: "#/components/responses/MissingScope"
         "401":
           $ref: "#/components/responses/Unauthorized"
 
@@ -411,8 +528,14 @@ paths:
     get:
       operationId: getEndUser
       summary: Get audience member details
-      description: Returns an audience member's metadata and all their active credentials.
+      description: |
+        Returns an audience member's metadata and their active credential(s) under the server identified by `x-mewcp-key`.
+
+        `Authorization` is your Account API Key; `x-mewcp-key` is that server's own MewCP Key. The two are not interchangeable and both are required.
       tags: [Audience]
+      security:
+        - AccountApiKey: []
+          MewcpKey: []
       parameters:
         - in: path
           name: externalUserId
@@ -421,6 +544,13 @@ paths:
             type: string
           description: Your internal user identifier
           example: user_abc123
+        - in: header
+          name: x-mewcp-key
+          required: true
+          schema:
+            type: string
+          description: MewCP Key of the business-mode server this end-user is connected under.
+          example: mewcp_7df44e73e8cd42bbf4860ffc66520ef...
       responses:
         "200":
           description: End-user details with credentials
@@ -456,12 +586,8 @@ paths:
                       - email
                       - profile
                     expiresAt: "2026-06-03T12:58:54.185Z"
-                  - credentialId: 9e9c513174def62142b1e621fa8bc98e
-                    providerSlug: gemini
-                    label: "Gemini - user_abc123"
-                    authType: static
-                    scopes: []
-                    expiresAt: null
+        "400":
+          $ref: "#/components/responses/MissingScope"
         "404":
           $ref: "#/components/responses/NotFound"
         "401":
@@ -469,14 +595,18 @@ paths:
 
     delete:
       operationId: revokeEndUser
-      summary: Revoke all credentials for an audience member
+      summary: Revoke an audience member's credential for a server
       description: |
-        Soft-deletes all active credentials for the audience member. The user will no longer be able
-        to make MCP calls until they reconnect.
+        Revokes the audience member's credential under the server identified by `x-mewcp-key` and
+        permanently scrubs the stored secrets (access/refresh tokens or api keys or secrets); they
+        cannot be recovered. The user will need to reconnect (re-authorize or resubmit their static
+        credentials) before MCP calls on their behalf will work again.
 
-        This is a cascade operation and revokes all providers at once. To revoke a single
-        credential, use `DELETE /end-users/{externalUserId}/credentials/{credentialId}`.
+        `Authorization` is your Account API Key; `x-mewcp-key` is that server's own MewCP Key. The two are not interchangeable and both are required.
       tags: [Audience]
+      security:
+        - AccountApiKey: []
+          MewcpKey: []
       parameters:
         - in: path
           name: externalUserId
@@ -484,47 +614,13 @@ paths:
           schema:
             type: string
           example: user_abc123
-      responses:
-        "200":
-          description: All credentials revoked
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  revokedCount:
-                    type: integer
-                    description: Number of credentials that were revoked
-              example:
-                success: true
-                revokedCount: 2
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
-  /end-users/{externalUserId}/credentials/{credentialId}:
-    delete:
-      operationId: revokeEndUserCredential
-      summary: Revoke a single audience member credential
-      description: Revokes one specific credential for an audience member, leaving any other provider credentials intact.
-      tags: [Audience]
-      parameters:
-        - in: path
-          name: externalUserId
+        - in: header
+          name: x-mewcp-key
           required: true
           schema:
             type: string
-          example: user_abc123
-        - in: path
-          name: credentialId
-          required: true
-          schema:
-            type: string
-          description: Credential ID returned by the list or get audience member endpoints
-          example: 9e9c513174def62142b1e621fa8bc98e
+          description: MewCP Key of the business-mode server this end-user is connected under.
+          example: mewcp_7df44e73e8cd42bbf4860ffc66520ef...
       responses:
         "200":
           description: Credential revoked
@@ -540,6 +636,8 @@ paths:
               example:
                 success: true
                 credentialId: 9e9c513174def62142b1e621fa8bc98e
+        "400":
+          $ref: "#/components/responses/MissingScope"
         "404":
           $ref: "#/components/responses/NotFound"
         "401":
