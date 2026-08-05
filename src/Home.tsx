@@ -246,35 +246,33 @@ agent = LlmAgent(
       </section>
 
       {/* Closing CTA */}
-      <section className="border-t border-border bg-primary">
-        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-6 py-14 sm:flex-row sm:items-center">
-          <div>
-            <h2 className="text-2xl font-bold text-primary-foreground">
-              Ready to connect your first agent?
-            </h2>
-            <p className="mt-2 text-primary-foreground/80">
-              Create a free MewCP account and give your agent access to its
-              first tool today.
-            </p>
-          </div>
-          <div className="flex flex-none flex-wrap items-center gap-3">
-            <Button size="xl" variant="secondary" asChild>
-              <a
-                href="https://mewcp.com"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Explore MewCP
-              </a>
-            </Button>
-            <Button
-              size="xl"
-              variant="ghost"
-              className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
-              asChild
-            >
-              <Link to="/mewcp/getting-started">Get started</Link>
-            </Button>
+      <section className="border-t border-border">
+        <div className="mx-auto max-w-6xl px-6 py-16">
+          <div className="flex flex-col items-start justify-between gap-6 border border-border bg-muted/30 px-8 py-10 sm:flex-row sm:items-center">
+            <div>
+              <h2 className="text-2xl font-bold text-foreground">
+                Ready to connect your first agent?
+              </h2>
+              <p className="mt-2 text-muted-foreground">
+                Create a free MewCP account and give your agent access to its
+                first tool today.
+              </p>
+            </div>
+            <div className="flex flex-none flex-wrap items-center gap-3">
+              <Button size="xl" asChild>
+                <a
+                  href="https://mewcp.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Explore MewCP
+                  <ArrowRightIcon />
+                </a>
+              </Button>
+              <Button size="xl" variant="outline" asChild>
+                <Link to="/mewcp/getting-started">Get started</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </section>
