@@ -17,77 +17,75 @@ By the end of this tutorial you will have Claude Desktop connected to MewCP's **
 
 ---
 
-## Step 1: Subscribe to the Web Scraper server
+<Stepper>
 
-1. Log in to the [MewCP dashboard](https://mewcp.com/dashboard)
-2. Go to **MCP Servers** and find **Web Scraper**
-3. Click **Add Server**
-4. Open the server detail page and copy your **Masked ID** (a short string like `abc123`)
+1. **Subscribe to the Web Scraper server**
 
----
+   1. Log in to the [MewCP dashboard](https://mewcp.com/dashboard)
+   1. Go to **MCP Servers** and find **Web Scraper**
+   1. Click **Add Server**
+   1. Open the server detail page and copy your **Masked ID** (a short string like `abc123`)
 
-## Step 2: Get your MewCP Key
+1. **Get your MewCP Key**
 
-1. In the dashboard go to **Credentials**
-2. Under **MewCP Keys**, click **Generate Key**
-3. Give it a label like `claude-desktop` and copy the key
+   1. In the dashboard go to **Credentials**
+   1. Under **MewCP Keys**, click **Generate Key**
+   1. Give it a label like `claude-desktop` and copy the key
 
-Your key looks like: `mewcp_7df44e73e8cd42bb...`
+   Your key looks like: `mcp_live_7df44e73e8cd42bb...`
 
-Keep this key safe. You will put it in the Claude Desktop config next.
+   Keep this key safe. You will put it in the Claude Desktop config next.
 
----
+1. **Connect Claude Desktop**
 
-## Step 3: Connect Claude Desktop
+   Open your Claude Desktop config file:
 
-Open your Claude Desktop config file:
+   | Platform | Path                                                              |
+   | -------- | ----------------------------------------------------------------- |
+   | macOS    | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+   | Windows  | `%APPDATA%\Claude\claude_desktop_config.json`                     |
 
-| Platform | Path                                                              |
-| -------- | ----------------------------------------------------------------- |
-| macOS    | `~/Library/Application Support/Claude/claude_desktop_config.json` |
-| Windows  | `%APPDATA%\Claude\claude_desktop_config.json`                     |
+   Replace `MCP_SERVER_NAME` and `your_key_here` with your actual values:
 
-Replace `MCP_SERVER_NAME` and `your_key_here` with your actual values:
+   ```json
+   {
+     "mcpServers": {
+       "MCP_SERVER_NAME": {
+         "command": "npx",
+         "args": [
+           "-y",
+           "mcp-remote@latest",
+           "https://gateway.mewcp.com/MCP_SERVER_NAME/mcp",
+           "--header",
+           "Authorization: Bearer ${MEWCP_KEY}"
+         ],
+         "env": {
+           "MEWCP_KEY": "your_key_here"
+         }
+       }
+     }
+   }
+   ```
 
-```json
-{
-  "mcpServers": {
-    "MCP_SERVER_NAME": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "mcp-remote@latest",
-        "https://gateway.mewcp.com/MCP_SERVER_NAME/mcp",
-        "--header",
-        "Authorization: Bearer ${MEWCP_KEY}"
-      ],
-      "env": {
-        "MEWCP_KEY": "your_key_here"
-      }
-    }
-  }
-}
-```
+   Save the file and **restart Claude Desktop**.
 
-Save the file and **restart Claude Desktop**.
+   You will see a tools icon appear in the chat panel confirming the server is connected.
 
-You will see a tools icon appear in the chat panel confirming the server is connected.
+1. **Call your first tool** 🚀
 
----
+   Open a new Claude Desktop chat and type:
 
-## Step 4: Call your first tool
+   ```
+   Use the scrape tool to fetch https://mewcp.com and tell me the page title.and description.
+   ```
 
-Open a new Claude Desktop chat and type:
+   Claude will call the `scrape` tool and return the result. You should see something like:
 
-```
-Use the scrape tool to fetch https://mewcp.com and tell me the page title.and description.
-```
+   > The page title is **"Example Domain"** and the description says it is for use in illustrative examples.
 
-Claude will call the `scrape` tool and return the result. You should see something like:
+   That is it. You have made your first MCP tool call through MewCP.
 
-> The page title is **"Example Domain"** and the description says it is for use in illustrative examples.
-
-That is it. You have made your first MCP tool call through MewCP.
+</Stepper>
 
 ---
 

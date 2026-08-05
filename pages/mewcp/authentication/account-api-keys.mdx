@@ -19,8 +19,12 @@ Example: `mewcp_acct_7df44e73e8cd42bbf4860ffc66520efb62d973615dc2c0f7fb5607fb82d
 
 ## How to get one
 
+<Stepper>
+
 1. Go to **Dashboard -> Developer -> Account API Keys**
-2. Click **Generate Key**, give it a label, and copy the key
+1. Click **Generate Key**, give it a label, and copy the key
+
+</Stepper>
 
 ---
 
@@ -31,7 +35,7 @@ Pass it as a Bearer token in the `Authorization` header. Every MewCP Auth API en
 ```bash
 curl https://gateway.mewcp.com/end-users \
   -H "Authorization: Bearer mewcp_acct_YOUR_KEY" \
-  -H "x-mewcp-key: mewcp_YOUR_SERVER_KEY"
+  -H "x-mewcp-key: mcp_live_YOUR_SERVER_KEY"
 ```
 
 TypeScript:

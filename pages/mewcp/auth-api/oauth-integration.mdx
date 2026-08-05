@@ -28,130 +28,126 @@ MCP servers for providers like **Google, Slack, GitHub, Notion**, and others use
 
 ## Integration flow
 
-### Step 1 - Start the OAuth flow
+<Stepper>
 
-Call `POST /oauth/{provider}/start` from your backend. Two headers are required: your Account API Key (`Authorization`) and the MewCP Key of the specific server you're connecting this user to (`x-mewcp-key`). The OAuth app used is always the one assigned to that server key, so there's no app selection in the request body. Pass the user's ID and, if you have a frontend, a callback URL. You can also pass optional user metadata, which MewCP stores alongside the credential for display in your dashboard:
+1. **Start the OAuth flow**
 
-```http
-POST /oauth/google/start
-Authorization: Bearer MEWCP_ACCT_API_KEY
-x-mewcp-key: MEWCP_KEY
+   Call `POST /oauth/{provider}/start` from your backend. Two headers are required: your Account API Key (`Authorization`) and the MewCP Key of the specific server you're connecting this user to (`x-mewcp-key`). The OAuth app used is always the one assigned to that server key, so there's no app selection in the request body. Pass the user's ID and, if you have a frontend, a callback URL. You can also pass optional user metadata, which MewCP stores alongside the credential for display in your dashboard:
 
-{
-  "externalUserId": "user_123",
-  "frontendCallbackUrl": "https://yourapp.com/oauth/callback",
-  "externalUserMeta": {
-    "name": "Jane Smith",
-    "email": "jane@example.com",
-    "username": "janesmith"
-  }
-}
-```
+   ```http
+   POST /oauth/google/start
+   Authorization: Bearer MEWCP_ACCT_API_KEY
+   x-mewcp-key: MEWCP_KEY
 
-| Field                       | Required | Description                                          |
-| --------------------------- | -------- | ---------------------------------------------------- |
-| `externalUserId`            | Yes      | Your internal user identifier                        |
-| `frontendCallbackUrl`       | No       | Where MewCP redirects the user after OAuth completes |
-| `externalUserMeta.name`     | No       | User's display name, stored for your reference       |
-| `externalUserMeta.email`    | No       | User's email, stored for your reference              |
-| `externalUserMeta.username` | No       | User's username, stored for your reference           |
+   {
+     "externalUserId": "user_123",
+     "frontendCallbackUrl": "https://yourapp.com/oauth/callback",
+     "externalUserMeta": {
+       "name": "Jane Smith",
+       "email": "jane@example.com",
+       "username": "janesmith"
+     }
+   }
+   ```
 
-If `x-mewcp-key` is missing, invalid, not a business-mode server key, or belongs to a different provider than `{provider}` in the path, the call fails with `401`/`400` before any OAuth URL is generated.
+   | Field                       | Required | Description                                          |
+   | --------------------------- | -------- | ----------------------------------------------------- |
+   | `externalUserId`            | Yes      | Your internal user identifier                        |
+   | `frontendCallbackUrl`       | No       | Where MewCP redirects the user after OAuth completes |
+   | `externalUserMeta.name`     | No       | User's display name, stored for your reference       |
+   | `externalUserMeta.email`    | No       | User's email, stored for your reference              |
+   | `externalUserMeta.username` | No       | User's username, stored for your reference           |
 
-You get back:
+   If `x-mewcp-key` is missing, invalid, not a business-mode server key, or belongs to a different provider than `{provider}` in the path, the call fails with `401`/`400` before any OAuth URL is generated.
 
-```json
-{
-  "authUrl": "https://accounts.google.com/o/oauth2/auth?client_id=...",
-  "state": "a3f9..."
-}
-```
+   You get back:
 
-The `state` value is internal: MewCP uses it to verify the callback. You do not need to store or validate it.
+   ```json
+   {
+     "authUrl": "https://accounts.google.com/o/oauth2/auth?client_id=...",
+     "state": "a3f9..."
+   }
+   ```
 
----
+   The `state` value is internal: MewCP uses it to verify the callback. You do not need to store or validate it.
 
-### Step 2 - Open the auth URL for your user
+1. **Open the auth URL for your user**
 
-**If you have a frontend (web app):**
+   **If you have a frontend (web app):**
 
-Open the URL as a popup, the standard OAuth pattern. The popup must be opened from a user action (e.g. a button click), otherwise browsers will block it.
+   Open the URL as a popup, the standard OAuth pattern. The popup must be opened from a user action (e.g. a button click), otherwise browsers will block it.
 
-```js
-// Open the popup on button click
-const popup = window.open(authUrl, "mewcp-oauth", "width=500,height=650");
+   ```js
+   // Open the popup on button click
+   const popup = window.open(authUrl, "mewcp-oauth", "width=500,height=650");
 
-// Listen for the result message from your callback page
-window.addEventListener("message", (event) => {
-  if (event.origin !== window.location.origin) return;
-  const { provider, success, error } = event.data;
-  if (success) {
-    // OAuth completed - update your UI
-    console.log(`${provider} connected`);
-  } else if (error) {
-    console.error("OAuth failed:", error);
-  }
-});
-```
+   // Listen for the result message from your callback page
+   window.addEventListener("message", (event) => {
+     if (event.origin !== window.location.origin) return;
+     const { provider, success, error } = event.data;
+     if (success) {
+       // OAuth completed - update your UI
+       console.log(`${provider} connected`);
+     } else if (error) {
+       console.error("OAuth failed:", error);
+     }
+   });
+   ```
 
-After the user logs in, MewCP redirects the popup to your `frontendCallbackUrl`:
+   After the user logs in, MewCP redirects the popup to your `frontendCallbackUrl`:
 
-| Result  | Query params on your callback URL |
-| ------- | --------------------------------- |
-| Success | `?provider=google&success=true`   |
-| Error   | `?oauth_error=<message>`          |
+   | Result  | Query params on your callback URL |
+   | ------- | ---------------------------------- |
+   | Success | `?provider=google&success=true`   |
+   | Error   | `?oauth_error=<message>`          |
 
-Your callback page needs to forward this result to the parent window and close the popup:
+   Your callback page needs to forward this result to the parent window and close the popup:
 
-```js
-// On your frontendCallbackUrl page
-const params = new URLSearchParams(window.location.search);
-window.opener?.postMessage(
-  {
-    provider: params.get("provider"),
-    success: params.get("success") === "true",
-    error: params.get("oauth_error") ?? null,
-  },
-  window.location.origin,
-);
-window.close();
-```
+   ```js
+   // On your frontendCallbackUrl page
+   const params = new URLSearchParams(window.location.search);
+   window.opener?.postMessage(
+     {
+       provider: params.get("provider"),
+       success: params.get("success") === "true",
+       error: params.get("oauth_error") ?? null,
+     },
+     window.location.origin,
+   );
+   window.close();
+   ```
 
----
+   **If you prefer a full redirect (no popup):**
 
-**If you prefer a full redirect (no popup):**
+   Instead of opening a popup, redirect the user directly to the `authUrl`. After OAuth completes, MewCP redirects them back to your `frontendCallbackUrl`. Handle the result there as a normal page load:
 
-Instead of opening a popup, redirect the user directly to the `authUrl`. After OAuth completes, MewCP redirects them back to your `frontendCallbackUrl`. Handle the result there as a normal page load:
+   ```js
+   window.location.href = authUrl;
+   ```
 
-```js
-window.location.href = authUrl;
-```
+   ```js
+   // On your frontendCallbackUrl page
+   const params = new URLSearchParams(window.location.search);
+   if (params.get("success") === "true") {
+     // show success, redirect to dashboard, etc.
+   }
+   ```
 
-```js
-// On your frontendCallbackUrl page
-const params = new URLSearchParams(window.location.search);
-if (params.get("success") === "true") {
-  // show success, redirect to dashboard, etc.
-}
-```
+   **If you have no frontend (local tools / server-only setups):**
 
----
+   Simply open the `authUrl` in a browser, log in, and you're done. MewCP will show a **"Connected"** confirmation page with a close button. The credential is saved automatically, no further action needed.
 
-**If you have no frontend (local tools / server-only setups):**
+1. **Use the connection** 🚀
 
-Simply open the `authUrl` in a browser, log in, and you're done. MewCP will show a **"Connected"** confirmation page with a close button. The credential is saved automatically, no further action needed.
+   Once connected, route your user's MCP requests through the gateway with their `externalUserId` in the header:
 
----
+   ```http
+   x-external-user-id: user_123
+   ```
 
-### Step 3 - Use the connection
+   MewCP resolves the stored credential and makes the authenticated call on their behalf.
 
-Once connected, route your user's MCP requests through the gateway with their `externalUserId` in the header:
-
-```http
-x-external-user-id: user_123
-```
-
-MewCP resolves the stored credential and makes the authenticated call on their behalf.
+</Stepper>
 
 ---
 
