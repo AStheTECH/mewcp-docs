@@ -1,4 +1,5 @@
 import type { ZudokuConfig } from "zudoku";
+import { Home } from "./src/Home";
 
 const config: ZudokuConfig = {
   site: {
@@ -106,6 +107,12 @@ const config: ZudokuConfig = {
   },
   navigation: [
     {
+      type: "custom-page",
+      path: "/",
+      element: <Home />,
+      display: "hide",
+    },
+    {
       type: "category",
       label: "Documentation",
       icon: "book-open",
@@ -164,7 +171,6 @@ const config: ZudokuConfig = {
     },
   ],
   redirects: [
-    { from: "/", to: "/mewcp/getting-started" },
     { from: "/introduction", to: "/mewcp/getting-started" },
     { from: "/mewcp/mcp-api-keys", to: "/mewcp/authentication/mewcp-key" },
     {
