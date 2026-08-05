@@ -26,7 +26,7 @@ info:
 
     ```
     Authorization: Bearer mewcp_acct_YOUR_KEY
-    x-mewcp-key: mewcp_YOUR_SERVER_KEY
+    x-mewcp-key: mcp_live_YOUR_SERVER_KEY
     ```
 
     This is the same MewCP Key used to authenticate MCP client connections (see
@@ -257,7 +257,7 @@ paths:
           schema:
             type: string
           description: MewCP Key of the business-mode server to connect this user to. Must match `provider`.
-          example: mewcp_7df44e73e8cd42bbf4860ffc66520ef...
+          example: mcp_live_7df44e73e8cd42bbf4860ffc66520ef...
       requestBody:
         required: true
         content:
@@ -382,7 +382,7 @@ paths:
           schema:
             type: string
           description: MewCP Key of the business-mode server to connect this user to. Must match `providerSlug`.
-          example: mewcp_7df44e73e8cd42bbf4860ffc66520ef...
+          example: mcp_live_7df44e73e8cd42bbf4860ffc66520ef...
       requestBody:
         required: true
         content:
@@ -494,7 +494,7 @@ paths:
           schema:
             type: string
           description: MewCP Key of the business-mode server to list audience for.
-          example: mewcp_7df44e73e8cd42bbf4860ffc66520ef...
+          example: mcp_live_7df44e73e8cd42bbf4860ffc66520ef...
       responses:
         "200":
           description: List of audience
@@ -550,7 +550,7 @@ paths:
           schema:
             type: string
           description: MewCP Key of the business-mode server this end-user is connected under.
-          example: mewcp_7df44e73e8cd42bbf4860ffc66520ef...
+          example: mcp_live_7df44e73e8cd42bbf4860ffc66520ef...
       responses:
         "200":
           description: End-user details with credentials
@@ -620,7 +620,7 @@ paths:
           schema:
             type: string
           description: MewCP Key of the business-mode server this end-user is connected under.
-          example: mewcp_7df44e73e8cd42bbf4860ffc66520ef...
+          example: mcp_live_7df44e73e8cd42bbf4860ffc66520ef...
       responses:
         "200":
           description: Credential revoked
