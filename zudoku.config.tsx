@@ -20,7 +20,7 @@ const config: ZudokuConfig = {
       social: [
         { icon: "github", href: "https://github.com/AStheTECH" },
         { icon: "x", href: "https://x.com/mewcp_ai" },
-        { icon: "reddit", href: "https://www.reddit.com/user/mewcpai/" },
+        // { icon: "reddit", href: "https://www.reddit.com/user/mewcpai/" },
       ],
       copyright: `© ${new Date().getFullYear()} MewCP. All rights reserved.`,
     },

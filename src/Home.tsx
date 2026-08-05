@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Head, Link } from "zudoku/components";
 import {
   ActivityIcon,
@@ -89,6 +90,57 @@ const agentFrameworks = [
   { label: "Claude SDK", to: "/mewcp/connect-agents/claude-sdk" },
 ];
 
+const AGENT_CODE = `from google.adk.agents import LlmAgent
+from google.adk.tools.mcp_tool import MCPToolset
+from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
+
+toolset = MCPToolset(
+    connection_params=StreamableHTTPConnectionParams(
+        url=f"https://gateway.mewcp.com/{MASKED_ID}/mcp",
+        headers={"Authorization": f"Bearer {MEWCP_KEY}"},
+    )
+)
+
+agent = LlmAgent(
+    model="gemini-2.0-flash",
+    name="web_agent",
+    instruction="You are a helpful web research assistant.",
+    tools=[toolset],
+)`;
+
+const PY_TOKEN_RE =
+  /(?<str>f?"(?:[^"\\]|\\.)*")|(?<kw>\b(?:from|import)\b)|(?<cls>\b[A-Z][A-Za-z0-9]*\b)|(?<kwarg>\b[a-z_][a-z0-9_]*(?=\s*=))/g;
+
+const PY_TOKEN_STYLES: Record<string, string> = {
+  str: "text-amber-300",
+  kw: "text-pink-400",
+  cls: "text-sky-300",
+  kwarg: "text-blue-300",
+};
+
+const highlightPython = (code: string): ReactNode[] => {
+  const nodes: ReactNode[] = [];
+  let lastIndex = 0;
+  let key = 0;
+
+  for (const match of code.matchAll(PY_TOKEN_RE)) {
+    const text = match[0];
+    const index = match.index ?? 0;
+    if (index > lastIndex) nodes.push(code.slice(lastIndex, index));
+
+    const group = Object.entries(match.groups ?? {}).find(([, v]) => v)?.[0];
+    nodes.push(
+      <span key={key++} className={group ? PY_TOKEN_STYLES[group] : undefined}>
+        {text}
+      </span>,
+    );
+    lastIndex = index + text.length;
+  }
+  if (lastIndex < code.length) nodes.push(code.slice(lastIndex));
+
+  return nodes;
+};
+
 const LinkPill = ({ label, to }: { label: string; to: string }) => (
   <Link
     to={to}
@@ -153,23 +205,7 @@ export const Home = () => {
               <span className="ml-2 text-xs text-white/40">agent.py</span>
             </div>
             <pre className="whitespace-pre-wrap break-words px-5 py-5 text-[13px] leading-relaxed text-zinc-300">
-              <code>{`from google.adk.agents import LlmAgent
-from google.adk.tools.mcp_tool import MCPToolset
-from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
-
-toolset = MCPToolset(
-    connection_params=StreamableHTTPConnectionParams(
-        url=f"https://gateway.mewcp.com/{MASKED_ID}/mcp",
-        headers={"Authorization": f"Bearer {MEWCP_KEY}"},
-    )
-)
-
-agent = LlmAgent(
-    model="gemini-2.0-flash",
-    name="web_agent",
-    instruction="You are a helpful web research assistant.",
-    tools=[toolset],
-)`}</code>
+              <code>{highlightPython(AGENT_CODE)}</code>
             </pre>
           </div>
         </div>
