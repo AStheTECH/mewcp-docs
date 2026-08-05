@@ -57,6 +57,7 @@ const config: ZudokuConfig = {
       border: "oklch(92.3% 0.003 48.7)",
       input: "oklch(92.3% 0.003 48.7)",
       ring: "oklch(70.5% 0.187 47.6)",
+      radius: "0px",
     },
     dark: {
       background: "oklch(14.7% 0.004 49.3)",
@@ -78,6 +79,7 @@ const config: ZudokuConfig = {
       border: "oklch(26.9% 0.006 34.3)",
       input: "oklch(26.9% 0.006 34.3)",
       ring: "oklch(64.5% 0.194 41.1)",
+      radius: "0px",
     },
   },
   metadata: {
