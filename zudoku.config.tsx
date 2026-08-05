@@ -28,8 +28,8 @@ const config: ZudokuConfig = {
     logo: {
       src: {
         light:
-          "https://res.cloudinary.com/da3kyd9r4/image/upload/v1774472376/Mew_op50ya.svg",
-        dark: "https://res.cloudinary.com/da3kyd9r4/image/upload/v1774472376/Mew_op50ya.svg",
+          "https://res.cloudinary.com/da3kyd9r4/image/upload/v1783718127/MewCP_logo_d1a4w6.svg",
+        dark: "https://res.cloudinary.com/da3kyd9r4/image/upload/v1783718127/MewCP_logo_d1a4w6.svg",
       },
       alt: "MewCP",
       width: "90px",
