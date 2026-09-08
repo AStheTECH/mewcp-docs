@@ -48,7 +48,7 @@ const features = [
     icon: NetworkIcon,
     title: "One connection, every tool",
     description:
-      "Point an agent at MewCP once and it can call every tool across every server you subscribe to, no per-tool plumbing.",
+      "Point an agent at MewCP once and it reaches every app you have connected. Connect another and it is available with no config change.",
   },
   {
     icon: ShieldCheckIcon,
@@ -96,15 +96,15 @@ from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnecti
 
 toolset = MCPToolset(
     connection_params=StreamableHTTPConnectionParams(
-        url=f"https://gateway.mewcp.com/{MASKED_ID}/mcp",
+        url="https://gateway.mewcp.com/personal/mcp",
         headers={"Authorization": f"Bearer {MEWCP_KEY}"},
     )
 )
 
 agent = LlmAgent(
     model="gemini-2.0-flash",
-    name="web_agent",
-    instruction="You are a helpful web research assistant.",
+    name="assistant",
+    instruction="Search and act across the user's connected apps.",
     tools=[toolset],
 )`;
 
