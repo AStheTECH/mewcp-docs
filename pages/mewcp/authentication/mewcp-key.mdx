@@ -5,6 +5,8 @@ description: The key used to authenticate MCP client connections to the gateway.
 
 A **MewCP Key** authenticates MCP client connections to the gateway. Every time Claude Desktop, VS Code, or your application makes a request through `gateway.mewcp.com`, it presents this key.
 
+One key covers every app you have connected. You do not need a separate key per app, and you do not need to change the key when you connect a new one.
+
 ---
 
 ## Format
@@ -19,13 +21,11 @@ Example: `mcp_live_7df44e73e8cd42bbf4860ffc66520ef...`
 
 ## How to get one
 
-A MewCP Key is automatically generated when you add an MCP server to your subscription - no manual creation needed.
-
 <Stepper>
 
-1. Go to **Dashboard**
-1. Navigate to your **Credentials**
-1. Select **MCP Server** -> Copy the **MewCP Key**
+1. Log in to the [MewCP dashboard](https://mewcp.com/dashboard)
+1. Go to **API Keys**
+1. Copy your **MewCP Key**
 
 </Stepper>
 
@@ -47,9 +47,26 @@ In client configs:
 }
 ```
 
+Clients that cannot set an `Authorization` header can send the key as `x-mewcp-key` instead.
+
+The key goes with your toolset endpoint:
+
+```
+https://gateway.mewcp.com/personal/mcp
+```
+
+---
+
+## What it does and does not carry
+
+The MewCP Key identifies **you**. It does not carry any app credential.
+
+When a tool runs, MewCP looks up the account you connected for that app and injects it into the upstream request at that moment. Your connected app credentials never travel to your client, your agent, or the model. The only secret in your config is this key.
+
 ---
 
 ## Best practices
 
 - **Never put it in frontend code.** MewCP Keys are for server-to-gateway connections only.
-- **Revoke if compromised.** Go to **Credentials -> MewCP Keys**, click **Revoke**. The old key stops working immediately.
+- **Use an environment variable.** Keep the key out of committed config files.
+- **Revoke if compromised.** Go to **API Keys** and click **Revoke**. The old key stops working immediately.
