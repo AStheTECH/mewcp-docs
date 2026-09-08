@@ -7,7 +7,8 @@ description: Connect MewCP to Claude Desktop.
 
 - Claude Desktop installed ([download](https://claude.ai/download))
 - Node.js installed (used by the `mcp-remote` bridge)
-- A MewCP Key - see [Authentication](/mewcp/authentication)
+- A MewCP Key, see [Authentication](/mewcp/authentication)
+- At least one app connected in the dashboard under **Servers**
 
 ---
 
@@ -20,17 +21,17 @@ Open your Claude Desktop config file:
 | macOS    | `~/Library/Application Support/Claude/claude_desktop_config.json` |
 | Windows  | `%APPDATA%\Claude\claude_desktop_config.json`                     |
 
-Add your MewCP server under `mcpServers`:
+Add MewCP under `mcpServers`:
 
 ```json
 {
   "mcpServers": {
-    "MCP_SERVER_NAME": {
+    "mewcp": {
       "command": "npx",
       "args": [
         "-y",
         "mcp-remote@latest",
-        "https://gateway.mewcp.com/MCP_SERVER_NAME/mcp",
+        "https://gateway.mewcp.com/personal/mcp",
         "--header",
         "Authorization: Bearer ${MEWCP_KEY}"
       ],
@@ -42,50 +43,41 @@ Add your MewCP server under `mcpServers`:
 }
 ```
 
-If the server requires a credential, add it as an additional header arg:
+Save the file and restart Claude Desktop. A tools icon will appear in the chat panel when MewCP is connected.
 
-```json
-{
-  "mcpServers": {
-    "MCP_SERVER_NAME": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "mcp-remote@latest",
-        "https://gateway.mewcp.com/MCP_SERVER_NAME/mcp",
-        "--header",
-        "Authorization: Bearer ${MEWCP_KEY}",
-        "--header",
-        "x-mewcp-credential-id: YOUR_CREDENTIAL_ID"
-      ],
-      "env": {
-        "MEWCP_KEY": "your_key_here"
-      }
-    }
-  }
-}
-```
+This is the entire configuration. Every app you have connected is reachable through this one entry, and connecting another app in the dashboard needs no change here.
 
-Save the file and restart Claude Desktop. A tools icon will appear in the chat panel when the server is connected.
+---
+
+## What you will see
+
+Claude will list four tools rather than the tools of each app: `search`, `get_schema`, `list_accounts`, and `call_tool`. That is expected. Claude uses them to find and run the right tool for whatever you ask, so you keep asking in plain language.
+
+See [How MewCP works](/mewcp/getting-started#how-mewcp-works) for the detail.
 
 ---
 
 ## Try it
 
-If you connected the **Web Scraper** server, open a chat and type:
+Ask for something from an app you have connected:
 
 ```
-Use the scrape tool to fetch https://mewcp.com and tell me the page title.
+What is on my calendar tomorrow?
 ```
 
-Claude will call the `scrape` tool and return the result.
+Claude will find the calendar tool, run it against your connected account, and answer.
+
+If you have two accounts connected for the same app, say which one you mean and Claude will pick it by alias:
+
+```
+Check my work Gmail for anything from the design team.
+```
 
 ---
 
 ## Where to find your values
 
-| Value                | Where to get it                                             |
-| -------------------- | ----------------------------------------------------------- |
-| `MCP_SERVER_NAME`    | Dashboard -> your subscribed server -> server detail page   |
-| `your_key_here`      | Dashboard -> Credentials -> MewCP Keys                      |
-| `YOUR_CREDENTIAL_ID` | Dashboard -> Credentials -> click the credential -> copy ID |
+| Value           | Where to get it              |
+| --------------- | ---------------------------- |
+| `your_key_here` | Dashboard -> API Keys        |
+| Connected apps  | Dashboard -> Servers         |

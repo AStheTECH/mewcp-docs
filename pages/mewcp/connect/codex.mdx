@@ -6,53 +6,51 @@ description: Connect MewCP to the OpenAI Codex CLI.
 ## Prerequisites
 
 - Codex CLI installed: `npm install -g @openai/codex`
-- A MewCP Key - see [Authentication](/mewcp/authentication)
+- A MewCP Key, see [Authentication](/mewcp/authentication)
+- At least one app connected in the dashboard under **Servers**
 
 ---
 
 ## Configuration
 
-Add your MewCP server to `~/.codex/config.yaml`:
+Add MewCP to `~/.codex/config.yaml`:
 
 ```yaml
 mcpServers:
-  MCP_SERVER_NAME:
-    type: sse
-    url: https://gateway.mewcp.com/MCP_SERVER_NAME/mcp
+  mewcp:
+    type: http
+    url: https://gateway.mewcp.com/personal/mcp
     headers:
       Authorization: "Bearer MEWCP_KEY"
 ```
 
-With a credential:
+MewCP will be available on the next `codex` invocation.
 
-```yaml
-mcpServers:
-  MCP_SERVER_NAME:
-    type: sse
-    url: https://gateway.mewcp.com/MCP_SERVER_NAME/mcp
-    headers:
-      Authorization: "Bearer MEWCP_KEY"
-      x-mewcp-credential-id: "YOUR_CREDENTIAL_ID"
-```
+This is the entire configuration. Every app you have connected is reachable through this one entry, and connecting another app in the dashboard needs no change here.
 
-The server will be available on the next `codex` invocation.
+---
+
+## What you will see
+
+Codex will list four tools rather than the tools of each app: `search`, `get_schema`, `list_accounts`, and `call_tool`. It uses them to find and run the right tool for whatever you ask.
+
+See [How MewCP works](/mewcp/getting-started#how-mewcp-works) for the detail.
 
 ---
 
 ## Try it
 
-If you connected the **Web Scraper** server, run:
+Ask for something from an app you have connected:
 
 ```bash
-codex "Use the scrape tool to fetch https://mewcp.com and return the page title"
+codex "Check my calendar for tomorrow and summarise the day"
 ```
 
 ---
 
 ## Where to find your values
 
-| Value                | Where to get it                                             |
-| -------------------- | ----------------------------------------------------------- |
-| `MCP_SERVER_NAME`    | Dashboard -> your subscribed server -> server detail page   |
-| `MEWCP_KEY`          | Dashboard -> Credentials -> MewCP Keys                      |
-| `YOUR_CREDENTIAL_ID` | Dashboard -> Credentials -> click the credential -> copy ID |
+| Value          | Where to get it       |
+| -------------- | --------------------- |
+| `MEWCP_KEY`    | Dashboard -> API Keys |
+| Connected apps | Dashboard -> Servers  |

@@ -6,7 +6,8 @@ description: Connect MewCP to VS Code or Cursor.
 ## Prerequisites
 
 - VS Code with GitHub Copilot extension, or Cursor
-- A MewCP Key - see [Authentication](/mewcp/authentication)
+- A MewCP Key, see [Authentication](/mewcp/authentication)
+- At least one app connected in the dashboard under **Servers**
 
 ---
 
@@ -14,7 +15,7 @@ description: Connect MewCP to VS Code or Cursor.
 
 Open **Command Palette** (`Cmd+Shift+P` / `Ctrl+Shift+P`) and select **Open User Settings (JSON)**.
 
-Add your MewCP server under the `mcp` key. VS Code will prompt you for the key securely the first time:
+Add MewCP under the `mcp` key. VS Code will prompt you for the key securely the first time:
 
 ```json
 {
@@ -28,38 +29,11 @@ Add your MewCP server under the `mcp` key. VS Code will prompt you for the key s
       }
     ],
     "servers": {
-      "MCP_SERVER_NAME": {
+      "mewcp": {
         "type": "http",
-        "url": "https://gateway.mewcp.com/MCP_SERVER_NAME/mcp",
+        "url": "https://gateway.mewcp.com/personal/mcp",
         "headers": {
           "Authorization": "Bearer ${input:MEWCP_KEY}"
-        }
-      }
-    }
-  }
-}
-```
-
-With a credential:
-
-```json
-{
-  "mcp": {
-    "inputs": [
-      {
-        "type": "promptString",
-        "id": "MEWCP_KEY",
-        "description": "MewCP Key",
-        "password": true
-      }
-    ],
-    "servers": {
-      "MCP_SERVER_NAME": {
-        "type": "http",
-        "url": "https://gateway.mewcp.com/MCP_SERVER_NAME/mcp",
-        "headers": {
-          "Authorization": "Bearer ${input:MEWCP_KEY}",
-          "x-mewcp-credential-id": "YOUR_CREDENTIAL_ID"
         }
       }
     }
@@ -81,9 +55,9 @@ Create or edit your Cursor MCP config file:
 ```json
 {
   "mcpServers": {
-    "MCP_SERVER_NAME": {
+    "mewcp": {
       "transport": "http",
-      "url": "https://gateway.mewcp.com/MCP_SERVER_NAME/mcp",
+      "url": "https://gateway.mewcp.com/personal/mcp",
       "headers": {
         "Authorization": "Bearer MEWCP_KEY"
       }
@@ -92,41 +66,33 @@ Create or edit your Cursor MCP config file:
 }
 ```
 
-With a credential:
+Restart Cursor. MewCP will be available in Agent mode.
 
-```json
-{
-  "mcpServers": {
-    "MCP_SERVER_NAME": {
-      "transport": "http",
-      "url": "https://gateway.mewcp.com/MCP_SERVER_NAME/mcp",
-      "headers": {
-        "Authorization": "Bearer MEWCP_KEY",
-        "x-mewcp-credential-id": "YOUR_CREDENTIAL_ID"
-      }
-    }
-  }
-}
-```
+---
 
-Restart Cursor. The server will be available in Agent mode.
+## One entry, every app
+
+Both configs above are complete. Every app you have connected is reachable through this single entry, and connecting another app in the dashboard needs no change here.
+
+You will see four tools listed rather than the tools of each app: `search`, `get_schema`, `list_accounts`, and `call_tool`. Your editor's agent uses them to find and run the right tool for whatever you ask.
+
+See [How MewCP works](/mewcp/getting-started#how-mewcp-works) for the detail.
 
 ---
 
 ## Try it
 
-If you connected the **Web Scraper** server, open Copilot Chat or Cursor Agent and type:
+Open Copilot Chat or Cursor Agent and ask for something from an app you have connected:
 
 ```
-Use the scrape tool to fetch https://mewcp.com and tell me the page title.
+Search my Notion for the Q3 planning doc and summarise it.
 ```
 
 ---
 
 ## Where to find your values
 
-| Value                | Where to get it                                             |
-| -------------------- | ----------------------------------------------------------- |
-| `MCP_SERVER_NAME`    | Dashboard -> your subscribed server -> server detail page   |
-| `MEWCP_KEY`          | Dashboard -> Credentials -> MewCP Keys                      |
-| `YOUR_CREDENTIAL_ID` | Dashboard -> Credentials -> click the credential -> copy ID |
+| Value          | Where to get it       |
+| -------------- | --------------------- |
+| `MEWCP_KEY`    | Dashboard -> API Keys |
+| Connected apps | Dashboard -> Servers  |

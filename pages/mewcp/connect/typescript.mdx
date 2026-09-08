@@ -11,21 +11,19 @@ npm install @modelcontextprotocol/sdk
 
 ---
 
-## Example
+## Connect
 
 ```typescript
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
-const GATEWAY_URL = "https://gateway.mewcp.com/MCP_SERVER_NAME/mcp";
+const GATEWAY_URL = "https://gateway.mewcp.com/personal/mcp";
 const MEWCP_KEY = "YOUR_MEWCP_KEY";
-const CREDENTIAL_ID = "YOUR_CREDENTIAL_ID";
 
 const transport = new StreamableHTTPClientTransport(new URL(GATEWAY_URL), {
   requestInit: {
     headers: {
       Authorization: `Bearer ${MEWCP_KEY}`,
-      "x-mewcp-credential-id": CREDENTIAL_ID,
       Accept: "application/json, text/event-stream",
     },
   },
@@ -43,41 +41,101 @@ console.log(
   "Available tools:",
   tools.tools.map((t) => t.name),
 );
+// -> ["search", "get_schema", "list_accounts", "call_tool"]
+```
 
-// Call the scrape tool
+Every app you have connected is reachable through this one endpoint. You get four tools rather than the tools of each app, and you use them to reach the rest.
+
+---
+
+## Find a tool
+
+```typescript
+const found = await client.callTool({
+  name: "search",
+  arguments: { query: "calendar events" },
+});
+// each hit carries the server_maskedId and tool_name you need next
+```
+
+```typescript
+const schema = await client.callTool({
+  name: "get_schema",
+  arguments: {
+    tools: [{ server_maskedId: "google-calendar", tool_name: "list_events" }],
+  },
+});
+```
+
+---
+
+## Run a tool
+
+```typescript
 const result = await client.callTool({
-  name: "scrape",
-  arguments: { url: "https://mewcp.com" },
+  name: "call_tool",
+  arguments: {
+    server_maskedId: "google-calendar",
+    tool_name: "list_events",
+    args: {
+      calendar_id: "primary",
+      time_min: "2026-01-15T00:00:00Z",
+      time_max: "2026-01-16T00:00:00Z",
+    },
+  },
 });
 console.log(result);
 ```
+
+If your code already knows which tool it wants, call `call_tool` directly. `search` and `get_schema` exist for agents that have to work it out at runtime.
+
+---
+
+## Choosing an account
+
+When you have connected more than one account for the same app, list them and pass the one you want as `alias`:
+
+```typescript
+const accounts = await client.callTool({
+  name: "list_accounts",
+  arguments: { provider: "google-gmail" },
+});
+
+const result = await client.callTool({
+  name: "call_tool",
+  arguments: {
+    server_maskedId: "google-gmail",
+    tool_name: "list_messages",
+    args: { max_results: 10 },
+    alias: "work",
+  },
+});
+```
+
+With a single connected account you can leave `alias` out.
 
 ---
 
 ## B2B: audience member credential routing
 
-If you are managing audience member credentials via the [MewCP Auth API](/mewcp-auth),
-pass the user's ID instead of a credential ID:
+If you are managing audience member credentials via the [MewCP Auth API](/mewcp-auth), identify the end user with a header and MewCP resolves their stored credential automatically:
 
 ```typescript
 const transport = new StreamableHTTPClientTransport(new URL(GATEWAY_URL), {
   requestInit: {
     headers: {
       Authorization: `Bearer ${MEWCP_KEY}`,
-      "x-external-user-id": currentUser.id,
+      "x-mewcp-enduser-id": currentUser.id,
     },
   },
 });
 ```
 
-MewCP resolves the stored credential for that user automatically.
-
 ---
 
 ## Where to find your values
 
-| Value                | Where to get it                                             |
-| -------------------- | ----------------------------------------------------------- |
-| `MCP_SERVER_NAME`    | Dashboard -> your subscribed server -> server detail page   |
-| `YOUR_MEWCP_KEY`     | Dashboard -> Credentials -> MewCP Keys                      |
-| `YOUR_CREDENTIAL_ID` | Dashboard -> Credentials -> click the credential -> copy ID |
+| Value              | Where to get it       |
+| ------------------ | --------------------- |
+| `YOUR_MEWCP_KEY`   | Dashboard -> API Keys |
+| Connected apps     | Dashboard -> Servers  |

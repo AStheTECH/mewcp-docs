@@ -11,20 +11,16 @@ pip install fastmcp
 
 ---
 
-## Example
+## Connect
 
 ```python
 import asyncio
 from fastmcp import Client
 
-GATEWAY_URL = "https://gateway.mewcp.com/MCP_SERVER_NAME/mcp"
+GATEWAY_URL = "https://gateway.mewcp.com/personal/mcp"
 MEWCP_KEY = "YOUR_MEWCP_KEY"
-CREDENTIAL_ID = "YOUR_CREDENTIAL_ID"
 
-headers = {
-    "Authorization": f"Bearer {MEWCP_KEY}",
-    "x-mewcp-credential-id": CREDENTIAL_ID,
-}
+headers = {"Authorization": f"Bearer {MEWCP_KEY}"}
 
 async def main():
     client = Client(GATEWAY_URL, headers=headers)
@@ -34,36 +30,89 @@ async def main():
 
         tools = await client.list_tools()
         print("Available tools:", [t.name for t in tools])
-
-        # Call the scrape tool
-        result = await client.call_tool("scrape", {"url": "https://mewcp.com"})
-        print(result)
+        # -> ["search", "get_schema", "list_accounts", "call_tool"]
 
 asyncio.run(main())
 ```
+
+Every app you have connected is reachable through this one endpoint. You get four tools rather than the tools of each app, and you use them to reach the rest.
+
+---
+
+## Find a tool
+
+```python
+found = await client.call_tool("search", {"query": "calendar events"})
+# each hit carries the server_maskedId and tool_name you need next
+
+schema = await client.call_tool(
+    "get_schema",
+    {"tools": [{"server_maskedId": "google-calendar", "tool_name": "list_events"}]},
+)
+```
+
+---
+
+## Run a tool
+
+```python
+result = await client.call_tool(
+    "call_tool",
+    {
+        "server_maskedId": "google-calendar",
+        "tool_name": "list_events",
+        "args": {
+            "calendar_id": "primary",
+            "time_min": "2026-01-15T00:00:00Z",
+            "time_max": "2026-01-16T00:00:00Z",
+        },
+    },
+)
+print(result)
+```
+
+If your code already knows which tool it wants, call `call_tool` directly. `search` and `get_schema` exist for agents that have to work it out at runtime.
+
+---
+
+## Choosing an account
+
+When you have connected more than one account for the same app, list them and pass the one you want as `alias`:
+
+```python
+accounts = await client.call_tool("list_accounts", {"provider": "google-gmail"})
+
+result = await client.call_tool(
+    "call_tool",
+    {
+        "server_maskedId": "google-gmail",
+        "tool_name": "list_messages",
+        "args": {"max_results": 10},
+        "alias": "work",
+    },
+)
+```
+
+With a single connected account you can leave `alias` out.
 
 ---
 
 ## B2B: audience member credential routing
 
-If you are managing audience member credentials via the [MewCP Auth API](/mewcp-auth),
-pass the user's ID instead of a credential ID:
+If you are managing audience member credentials via the [MewCP Auth API](/mewcp-auth), identify the end user with a header and MewCP resolves their stored credential automatically:
 
 ```python
 headers = {
     "Authorization": f"Bearer {MEWCP_KEY}",
-    "x-external-user-id": current_user.id,
+    "x-mewcp-enduser-id": current_user.id,
 }
 ```
-
-MewCP resolves the stored credential for that user automatically.
 
 ---
 
 ## Where to find your values
 
-| Value                | Where to get it                                             |
-| -------------------- | ----------------------------------------------------------- |
-| `MCP_SERVER_NAME`    | Dashboard -> your subscribed server -> server detail page   |
-| `YOUR_MEWCP_KEY`     | Dashboard -> Credentials -> MewCP Keys                      |
-| `YOUR_CREDENTIAL_ID` | Dashboard -> Credentials -> click the credential -> copy ID |
+| Value            | Where to get it       |
+| ---------------- | --------------------- |
+| `YOUR_MEWCP_KEY` | Dashboard -> API Keys |
+| Connected apps   | Dashboard -> Servers  |
