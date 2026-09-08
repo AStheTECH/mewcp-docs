@@ -5,7 +5,7 @@ description: Go from a new MewCP account to calling your first MCP tool.
 
 ## What you will build
 
-By the end of this tutorial you will have Claude Desktop connected to MewCP's **Web Scraper** server and will have called the `scrape` tool to fetch a live web page.
+By the end of this tutorial you will have Claude Desktop connected to MewCP, with your Google Calendar available as a tool, and you will have asked Claude a question it answers by calling that tool.
 
 **Time:** about 5 minutes.
 
@@ -19,22 +19,24 @@ By the end of this tutorial you will have Claude Desktop connected to MewCP's **
 
 <Stepper>
 
-1. **Subscribe to the Web Scraper server**
+1. **Connect an app**
 
    1. Log in to the [MewCP dashboard](https://mewcp.com/dashboard)
-   1. Go to **MCP Servers** and find **Web Scraper**
-   1. Click **Add Server**
-   1. Open the server detail page and copy your **Masked ID** (a short string like `abc123`)
+   1. Go to **Servers** and pick **Google Calendar**
+   1. Click **Connect account** and sign in with Google
+
+   That is the only place credentials are handled. Your connection is encrypted and stored in a secure vault, and you never paste a token into your client.
+
+   Connect as many apps as you like, now or later. Every one of them is reachable through the same setup below.
 
 1. **Get your MewCP Key**
 
-   1. In the dashboard go to **Credentials**
-   1. Under **MewCP Keys**, click **Generate Key**
-   1. Give it a label like `claude-desktop` and copy the key
+   1. In the dashboard go to **API Keys**
+   1. Copy your **MewCP Key**
 
    Your key looks like: `mcp_live_7df44e73e8cd42bb...`
 
-   Keep this key safe. You will put it in the Claude Desktop config next.
+   Keep this key safe. It is how your client proves it is you.
 
 1. **Connect Claude Desktop**
 
@@ -45,17 +47,17 @@ By the end of this tutorial you will have Claude Desktop connected to MewCP's **
    | macOS    | `~/Library/Application Support/Claude/claude_desktop_config.json` |
    | Windows  | `%APPDATA%\Claude\claude_desktop_config.json`                     |
 
-   Replace `MCP_SERVER_NAME` and `your_key_here` with your actual values:
+   Replace `your_key_here` with the key you just copied:
 
    ```json
    {
      "mcpServers": {
-       "MCP_SERVER_NAME": {
+       "mewcp": {
          "command": "npx",
          "args": [
            "-y",
            "mcp-remote@latest",
-           "https://gateway.mewcp.com/MCP_SERVER_NAME/mcp",
+           "https://gateway.mewcp.com/personal/mcp",
            "--header",
            "Authorization: Bearer ${MEWCP_KEY}"
          ],
@@ -67,25 +69,54 @@ By the end of this tutorial you will have Claude Desktop connected to MewCP's **
    }
    ```
 
+   That is the whole config, and it does not change when you connect more apps.
+
    Save the file and **restart Claude Desktop**.
 
-   You will see a tools icon appear in the chat panel confirming the server is connected.
+   You will see a tools icon appear in the chat panel confirming MewCP is connected.
 
-1. **Call your first tool** 🚀
+1. **Ask for something** 🚀
 
    Open a new Claude Desktop chat and type:
 
    ```
-   Use the scrape tool to fetch https://mewcp.com and tell me the page title.and description.
+   What is on my calendar tomorrow?
    ```
 
-   Claude will call the `scrape` tool and return the result. You should see something like:
+   Claude will find the right tool, call it against your connected Google account, and answer:
 
-   > The page title is **"Example Domain"** and the description says it is for use in illustrative examples.
+   > You have two events tomorrow: a team standup at 9:30am and a design review at 2pm.
 
-   That is it. You have made your first MCP tool call through MewCP.
+   That is it. You have made your first tool call through MewCP.
 
 </Stepper>
+
+---
+
+## How MewCP works
+
+**One URL, every app.**
+
+Your **personal toolset** is the set of apps you have connected. It has a single endpoint, `https://gateway.mewcp.com/personal/mcp`. Connect another app in the dashboard and it is available straight away, with no config change and no restart.
+
+When your client connects, it does not see hundreds of tools. It sees four:
+
+| Tool            | What it does                                     |
+| --------------- | ------------------------------------------------ |
+| `search`        | Find tools by keyword across every connected app |
+| `get_schema`    | Get the parameters for the tools it picked       |
+| `list_accounts` | List the accounts connected for one app          |
+| `call_tool`     | Run the tool                                     |
+
+Your agent uses them in that order, which is why you can ask in plain language and still get the right call. Keeping the tool list small is what keeps the agent accurate as the number of connected apps grows.
+
+If you have connected two accounts for the same app, `list_accounts` shows both and the agent picks one by its alias.
+
+### Your credentials stay with MewCP
+
+Connected credentials are encrypted at rest in a secure vault. They are decrypted and injected into the upstream request only at the moment a tool is called, and never travel to your client, your agent, or the model. Your config holds one MewCP Key and nothing else.
+
+Expired access is refreshed for you. If an app is not connected yet, or access was revoked, the call comes back with a link to hand to the user instead of failing quietly.
 
 ---
 
