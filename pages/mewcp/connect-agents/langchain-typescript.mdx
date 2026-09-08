@@ -11,22 +11,20 @@ npm install @langchain/mcp-adapters
 
 ---
 
-## Connect and call a tool
+## Connect
 
 ```typescript
 import { MultiServerMCPClient } from "@langchain/mcp-adapters";
 
-const MASKED_ID = "MCP_SERVER_NAME";
 const MEWCP_KEY = "YOUR_MEWCP_KEY";
 
 async function main() {
   const client = new MultiServerMCPClient({
     mcpServers: {
       mewcp: {
-        url: `https://gateway.mewcp.com/${MASKED_ID}/mcp`,
+        url: "https://gateway.mewcp.com/personal/mcp",
         headers: {
           Authorization: `Bearer ${MEWCP_KEY}`,
-          "x-mewcp-credential-id": "YOUR_CREDENTIAL_ID",
         },
       },
     },
@@ -37,11 +35,7 @@ async function main() {
     "Available tools:",
     tools.map((t) => t.name),
   );
-
-  // Call the scrape tool directly
-  const scrapeTool = tools.find((t) => t.name === "scrape")!;
-  const result = await scrapeTool.invoke({ url: "https://mewcp.com" });
-  console.log(result);
+  // -> ["search", "get_schema", "list_accounts", "call_tool"]
 
   await client.close();
 }
@@ -49,9 +43,34 @@ async function main() {
 main();
 ```
 
+You get four tools rather than the tools of each app. Your agent uses them to reach every app you have connected. See [How MewCP works](/mewcp/getting-started#how-mewcp-works).
+
+---
+
+## Call a tool directly
+
+```typescript
+const callTool = tools.find((t) => t.name === "call_tool")!;
+
+const result = await callTool.invoke({
+  server_maskedId: "google-calendar",
+  tool_name: "list_events",
+  args: {
+    calendar_id: "primary",
+    time_min: "2026-01-15T00:00:00Z",
+    time_max: "2026-01-16T00:00:00Z",
+  },
+});
+console.log(result);
+```
+
+If you have connected more than one account for the same app, add `alias: "work"` to select one.
+
 ---
 
 ## Use with a LangChain agent
+
+Hand all four tools to the agent and let it work out the rest:
 
 ```typescript
 import { MultiServerMCPClient } from "@langchain/mcp-adapters";
@@ -63,7 +82,7 @@ async function main() {
   const client = new MultiServerMCPClient({
     mcpServers: {
       mewcp: {
-        url: `https://gateway.mewcp.com/${MASKED_ID}/mcp`,
+        url: "https://gateway.mewcp.com/personal/mcp",
         headers: { Authorization: `Bearer ${MEWCP_KEY}` },
       },
     },
@@ -74,7 +93,7 @@ async function main() {
   const agent = createReactAgent({ llm: model, tools });
 
   const result = await agent.invoke({
-    messages: [new HumanMessage("Scrape https://mewcp.com and summarize it.")],
+    messages: [new HumanMessage("What is on my calendar tomorrow?")],
   });
   console.log(result.messages.at(-1)?.content);
 
@@ -84,12 +103,13 @@ async function main() {
 main();
 ```
 
+The agent will call `search` to find the calendar tool, `get_schema` for its parameters, then `call_tool` to run it.
+
 ---
 
 ## Where to find your values
 
-| Value                | Where to get it                                             |
-| -------------------- | ----------------------------------------------------------- |
-| `MCP_SERVER_NAME`    | Dashboard -> your subscribed server -> server detail page   |
-| `YOUR_MEWCP_KEY`     | Dashboard -> Credentials -> MewCP Keys                      |
-| `YOUR_CREDENTIAL_ID` | Dashboard -> Credentials -> click the credential -> copy ID |
+| Value            | Where to get it       |
+| ---------------- | --------------------- |
+| `YOUR_MEWCP_KEY` | Dashboard -> API Keys |
+| Connected apps   | Dashboard -> Servers  |

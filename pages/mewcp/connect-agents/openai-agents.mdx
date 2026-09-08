@@ -11,40 +11,54 @@ pip install openai-agents
 
 ---
 
-## Connect and call a tool
+## Connect
 
 ```python
 import asyncio
 from agents.mcp import MCPServerStreamableHttp
 
-MASKED_ID = "MCP_SERVER_NAME"
 MEWCP_KEY = "YOUR_MEWCP_KEY"
 
 async def main():
     async with MCPServerStreamableHttp(
         name="mewcp",
         params={
-            "url": f"https://gateway.mewcp.com/{MASKED_ID}/mcp",
-            "headers": {
-                "Authorization": f"Bearer {MEWCP_KEY}",
-                "x-mewcp-credential-id": "YOUR_CREDENTIAL_ID",
-            },
+            "url": "https://gateway.mewcp.com/personal/mcp",
+            "headers": {"Authorization": f"Bearer {MEWCP_KEY}"},
             "timeout": 30,
         },
         cache_tools_list=True,
     ) as server:
         tools = await server.list_tools()
         print("Available tools:", [t.name for t in tools])
-
-        # Call the scrape tool directly
-        result = await server.call_tool(
-            tool_name="scrape",
-            arguments={"url": "https://mewcp.com"},
-        )
-        print(result.content)
+        # -> ["search", "get_schema", "list_accounts", "call_tool"]
 
 asyncio.run(main())
 ```
+
+You get four tools rather than the tools of each app. Your agent uses them to reach every app you have connected. See [How MewCP works](/mewcp/getting-started#how-mewcp-works).
+
+---
+
+## Call a tool directly
+
+```python
+result = await server.call_tool(
+    tool_name="call_tool",
+    arguments={
+        "server_maskedId": "google-calendar",
+        "tool_name": "list_events",
+        "args": {
+            "calendar_id": "primary",
+            "time_min": "2026-01-15T00:00:00Z",
+            "time_max": "2026-01-16T00:00:00Z",
+        },
+    },
+)
+print(result.content)
+```
+
+If you have connected more than one account for the same app, add `"alias": "work"` to select one.
 
 ---
 
@@ -59,31 +73,29 @@ async def main():
     async with MCPServerStreamableHttp(
         name="mewcp",
         params={
-            "url": f"https://gateway.mewcp.com/{MASKED_ID}/mcp",
+            "url": "https://gateway.mewcp.com/personal/mcp",
             "headers": {"Authorization": f"Bearer {MEWCP_KEY}"},
         },
     ) as server:
         agent = Agent(
-            name="Web Agent",
-            instructions="You are a helpful web research assistant.",
+            name="Assistant",
+            instructions="You are a helpful assistant with access to the user's connected apps.",
             mcp_servers=[server],
         )
 
-        result = await Runner.run(
-            agent,
-            "Scrape https://mewcp.com and summarize the content.",
-        )
+        result = await Runner.run(agent, "What is on my calendar tomorrow?")
         print(result.final_output)
 
 asyncio.run(main())
 ```
 
+The agent will call `search` to find the calendar tool, `get_schema` for its parameters, then `call_tool` to run it.
+
 ---
 
 ## Where to find your values
 
-| Value                | Where to get it                                             |
-| -------------------- | ----------------------------------------------------------- |
-| `MCP_SERVER_NAME`    | Dashboard -> your subscribed server -> server detail page   |
-| `YOUR_MEWCP_KEY`     | Dashboard -> Credentials -> MewCP Keys                      |
-| `YOUR_CREDENTIAL_ID` | Dashboard -> Credentials -> click the credential -> copy ID |
+| Value            | Where to get it       |
+| ---------------- | --------------------- |
+| `YOUR_MEWCP_KEY` | Dashboard -> API Keys |
+| Connected apps   | Dashboard -> Servers  |

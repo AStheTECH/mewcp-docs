@@ -17,6 +17,8 @@ The Anthropic SDK's MCP connector is different from other frameworks. Rather tha
 
 You cannot call `list_tools()` or `call_tool()` imperatively. The model drives all tool use.
 
+That suits MewCP well. Claude sees four tools, `search`, `get_schema`, `list_accounts`, and `call_tool`, and uses them to reach every app you have connected. See [How MewCP works](/mewcp/getting-started#how-mewcp-works).
+
 ---
 
 ## Example
@@ -24,24 +26,23 @@ You cannot call `list_tools()` or `call_tool()` imperatively. The model drives a
 ```python
 import anthropic
 
-MASKED_ID = "MCP_SERVER_NAME"
 MEWCP_KEY = "YOUR_MEWCP_KEY"
 
 client = anthropic.Anthropic()
 
 response = client.beta.messages.create(
-    model="claude-opus-4-5",
+    model="claude-opus-5",
     max_tokens=2048,
     messages=[
         {
             "role": "user",
-            "content": "Use the scrape tool to fetch https://mewcp.com and return the page title and description.",
+            "content": "What is on my calendar tomorrow?",
         }
     ],
     mcp_servers=[
         {
             "type": "url",
-            "url": f"https://gateway.mewcp.com/{MASKED_ID}/mcp",
+            "url": "https://gateway.mewcp.com/personal/mcp",
             "name": "mewcp",
             "authorization_token": MEWCP_KEY,
         }
@@ -55,22 +56,19 @@ for block in response.content:
         print(block.text)
 ```
 
+One server entry covers every app you have connected. Connecting another app in the dashboard needs no change here.
+
 ---
 
-## With a credential
+## Choosing an account
 
-Pass the credential ID as an extra header via the `headers` field on the server config:
+When you have connected more than one account for the same app, say which one you mean in the prompt. Claude will call `list_accounts` and pick it by alias:
 
 ```python
-mcp_servers=[
+messages=[
     {
-        "type": "url",
-        "url": f"https://gateway.mewcp.com/{MASKED_ID}/mcp",
-        "name": "mewcp",
-        "authorization_token": MEWCP_KEY,
-        "headers": {
-            "x-mewcp-credential-id": "YOUR_CREDENTIAL_ID",
-        },
+        "role": "user",
+        "content": "Check my work Gmail for anything from the design team.",
     }
 ]
 ```
@@ -88,8 +86,7 @@ mcp_servers=[
 
 ## Where to find your values
 
-| Value                | Where to get it                                             |
-| -------------------- | ----------------------------------------------------------- |
-| `MCP_SERVER_NAME`    | Dashboard -> your subscribed server -> server detail page   |
-| `YOUR_MEWCP_KEY`     | Dashboard -> Credentials -> MewCP Keys                      |
-| `YOUR_CREDENTIAL_ID` | Dashboard -> Credentials -> click the credential -> copy ID |
+| Value            | Where to get it       |
+| ---------------- | --------------------- |
+| `YOUR_MEWCP_KEY` | Dashboard -> API Keys |
+| Connected apps   | Dashboard -> Servers  |

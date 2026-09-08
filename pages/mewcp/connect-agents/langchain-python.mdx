@@ -11,13 +11,12 @@ pip install langchain-mcp-adapters
 
 ---
 
-## Connect and call a tool
+## Connect
 
 ```python
 import asyncio
 from langchain_mcp_adapters.client import MultiServerMCPClient
 
-MASKED_ID = "MCP_SERVER_NAME"
 MEWCP_KEY = "YOUR_MEWCP_KEY"
 
 async def main():
@@ -25,30 +24,50 @@ async def main():
         {
             "mewcp": {
                 "transport": "streamable_http",
-                "url": f"https://gateway.mewcp.com/{MASKED_ID}/mcp",
-                "headers": {
-                    "Authorization": f"Bearer {MEWCP_KEY}",
-                    "x-mewcp-credential-id": "YOUR_CREDENTIAL_ID",
-                },
+                "url": "https://gateway.mewcp.com/personal/mcp",
+                "headers": {"Authorization": f"Bearer {MEWCP_KEY}"},
             }
         }
     ) as client:
         tools = await client.get_tools()
         print("Available tools:", [t.name for t in tools])
-
-        # Call the scrape tool directly
-        scrape_tool = next(t for t in tools if t.name == "scrape")
-        result = await scrape_tool.ainvoke({"url": "https://mewcp.com"})
-        print(result)
+        # -> ["search", "get_schema", "list_accounts", "call_tool"]
 
 asyncio.run(main())
 ```
 
 > Note: `transport` value is `"streamable_http"` (underscore).
 
+You get four tools rather than the tools of each app. Your agent uses them to reach every app you have connected. See [How MewCP works](/mewcp/getting-started#how-mewcp-works).
+
+---
+
+## Call a tool directly
+
+```python
+call_tool = next(t for t in tools if t.name == "call_tool")
+
+result = await call_tool.ainvoke(
+    {
+        "server_maskedId": "google-calendar",
+        "tool_name": "list_events",
+        "args": {
+            "calendar_id": "primary",
+            "time_min": "2026-01-15T00:00:00Z",
+            "time_max": "2026-01-16T00:00:00Z",
+        },
+    }
+)
+print(result)
+```
+
+If you have connected more than one account for the same app, add `"alias": "work"` to select one.
+
 ---
 
 ## Use with a LangChain agent
+
+Hand all four tools to the agent and let it work out the rest:
 
 ```python
 import asyncio
@@ -61,7 +80,7 @@ async def main():
         {
             "mewcp": {
                 "transport": "streamable_http",
-                "url": f"https://gateway.mewcp.com/{MASKED_ID}/mcp",
+                "url": "https://gateway.mewcp.com/personal/mcp",
                 "headers": {"Authorization": f"Bearer {MEWCP_KEY}"},
             }
         }
@@ -72,19 +91,20 @@ async def main():
         agent = create_react_agent(model, tools)
 
         result = await agent.ainvoke(
-            {"messages": [{"role": "user", "content": "Scrape https://mewcp.com and summarize it."}]}
+            {"messages": [{"role": "user", "content": "What is on my calendar tomorrow?"}]}
         )
         print(result["messages"][-1].content)
 
 asyncio.run(main())
 ```
 
+The agent will call `search` to find the calendar tool, `get_schema` for its parameters, then `call_tool` to run it.
+
 ---
 
 ## Where to find your values
 
-| Value                | Where to get it                                             |
-| -------------------- | ----------------------------------------------------------- |
-| `MCP_SERVER_NAME`    | Dashboard -> your subscribed server -> server detail page   |
-| `YOUR_MEWCP_KEY`     | Dashboard -> Credentials -> MewCP Keys                      |
-| `YOUR_CREDENTIAL_ID` | Dashboard -> Credentials -> click the credential -> copy ID |
+| Value            | Where to get it       |
+| ---------------- | --------------------- |
+| `YOUR_MEWCP_KEY` | Dashboard -> API Keys |
+| Connected apps   | Dashboard -> Servers  |
