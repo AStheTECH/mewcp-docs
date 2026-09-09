@@ -100,7 +100,7 @@ client = Client(
 )
 
 async with client:
-    # Routes to any app on your account.
+    # One MCP endpoint. Any connected app. Any tool.
     result = await client.call_tool("call_tool", {
 `;
 
