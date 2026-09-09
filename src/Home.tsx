@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Head, Link } from "zudoku/components";
 import {
   ActivityIcon,
@@ -90,28 +90,73 @@ const agentFrameworks = [
   { label: "Claude SDK", to: "/mewcp/connect-agents/claude-sdk" },
 ];
 
-const AGENT_CODE = `from google.adk.agents import LlmAgent
-from google.adk.tools.mcp_tool import MCPToolset
-from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
+// The head and tail never change. Only the three lines between them do, which is
+// the whole pitch: one endpoint, every app.
+const CODE_HEAD = `from fastmcp import Client
 
-toolset = MCPToolset(
-    connection_params=StreamableHTTPConnectionParams(
-        url="https://gateway.mewcp.com/personal/mcp",
-        headers={"Authorization": f"Bearer {MEWCP_KEY}"},
-    )
+client = Client(
+    "https://gateway.mewcp.com/personal/mcp",
+    headers={"Authorization": f"Bearer {MEWCP_KEY}"},
 )
 
-agent = LlmAgent(
-    model="gemini-2.0-flash",
-    name="assistant",
-    instruction="Search and act across the user's connected apps.",
-    tools=[toolset],
-)`;
+async with client:
+    # Routes to any app on your account.
+    result = await client.call_tool("call_tool", {
+`;
 
+const CODE_TAIL = `    })`;
+
+const CALLS = [
+  {
+    label: "Calendar",
+    server: "google-calendar",
+    tool: "list_events",
+    args: `{"calendar_id": "primary"}`,
+  },
+  {
+    label: "Gmail",
+    server: "google-gmail",
+    tool: "list_messages",
+    args: `{"max_results": 10}`,
+  },
+  {
+    label: "Notion",
+    server: "notion",
+    tool: "search_notion",
+    args: `{"query": "Q3 planning"}`,
+  },
+  {
+    label: "Slack",
+    server: "slack",
+    tool: "send_message",
+    args: `{"channel": "#design", "text": "Review at 2pm"}`,
+  },
+];
+
+const callBody = (call: (typeof CALLS)[number]): string =>
+  `        "server_maskedId": "${call.server}",\n` +
+  `        "tool_name": "${call.tool}",\n` +
+  `        "args": ${call.args},\n`;
+
+const HERO_ANIM_CSS = `
+@keyframes mewcp-call-in {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: none; }
+}
+.mewcp-call { animation: mewcp-call-in 400ms ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .mewcp-call { animation: none; }
+}
+`;
+
+// `com` must come first: a comment swallows the rest of its line, so capitalised
+// words inside it never fall through to `cls`. A "#" inside a string is safe,
+// since the scan reaches the opening quote first and `str` takes the whole span.
 const PY_TOKEN_RE =
-  /(?<str>f?"(?:[^"\\]|\\.)*")|(?<kw>\b(?:from|import)\b)|(?<cls>\b[A-Z][A-Za-z0-9]*\b)|(?<kwarg>\b[a-z_][a-z0-9_]*(?=\s*=))/g;
+  /(?<com>#[^\n]*)|(?<str>f?"(?:[^"\\]|\\.)*")|(?<kw>\b(?:from|import)\b)|(?<cls>\b[A-Z][A-Za-z0-9]*\b)|(?<kwarg>\b[a-z_][a-z0-9_]*(?=\s*=))/g;
 
 const PY_TOKEN_STYLES: Record<string, string> = {
+  com: "text-zinc-500",
   str: "text-amber-300",
   kw: "text-pink-400",
   cls: "text-sky-300",
@@ -152,6 +197,17 @@ const LinkPill = ({ label, to }: { label: string; to: string }) => (
 );
 
 export const Home = () => {
+  const [callIndex, setCallIndex] = useState(0);
+
+  useEffect(() => {
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    const id = setInterval(
+      () => setCallIndex((n) => (n + 1) % CALLS.length),
+      3600,
+    );
+    return () => clearInterval(id);
+  }, []);
+
   return (
     <div className="-mx-4 lg:-mx-8">
       <Head>
@@ -198,15 +254,39 @@ export const Home = () => {
           </div>
 
           <div className="overflow-hidden rounded-xl bg-zinc-950 shadow-xl ring-1 ring-border">
+            <style>{HERO_ANIM_CSS}</style>
             <div className="flex items-center gap-1.5 border-b border-white/10 px-4 py-3">
               <span className="size-2.5 rounded-full bg-white/20" />
               <span className="size-2.5 rounded-full bg-white/20" />
               <span className="size-2.5 rounded-full bg-white/20" />
-              <span className="ml-2 text-xs text-white/40">agent.py</span>
+              <span className="ml-2 text-xs text-white/40">client.py</span>
             </div>
-            <pre className="whitespace-pre-wrap break-words px-5 py-5 text-[13px] leading-relaxed text-zinc-300">
-              <code>{highlightPython(AGENT_CODE)}</code>
+            {/* whitespace-pre, not pre-wrap: every frame is then exactly three
+                lines, so cycling cannot change the panel height. */}
+            <pre className="overflow-x-auto whitespace-pre px-5 py-5 text-[13px] leading-relaxed text-zinc-300">
+              <code>
+                <span>{highlightPython(CODE_HEAD)}</span>
+                <span key={callIndex} className="mewcp-call">
+                  {highlightPython(callBody(CALLS[callIndex]))}
+                </span>
+                <span>{highlightPython(CODE_TAIL)}</span>
+              </code>
             </pre>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-white/10 px-5 py-3 text-[11px]">
+              <span className="text-white/35">One endpoint</span>
+              {CALLS.map((call, index) => (
+                <span
+                  key={call.server}
+                  className={
+                    index === callIndex
+                      ? "font-medium text-primary transition-colors duration-300"
+                      : "text-white/25 transition-colors duration-300"
+                  }
+                >
+                  {call.label}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       </section>
