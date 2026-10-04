@@ -216,6 +216,14 @@ export const Home = () => {
           name="description"
           content="MewCP connects any LLM or agent to the tools and services it needs, with auth, credentials, usage controls, and team access already handled."
         />
+        <meta
+          property="og:title"
+          content="MewCP — Give your agents access to the real world"
+        />
+        <meta
+          property="og:description"
+          content="MewCP connects any LLM or agent to the tools and services it needs, with auth, credentials, usage controls, and team access already handled."
+        />
       </Head>
 
       {/* Hero */}

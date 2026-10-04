@@ -1,7 +1,47 @@
 import type { ZudokuConfig } from "zudoku";
+import { Head } from "zudoku/components";
 import { Home } from "./src/Home";
 
+const SITE_URL = "https://docs.mewcp.com";
+const SOCIAL_IMAGE = `${SITE_URL}/og-image.png`;
+const ORG_LOGO = `${SITE_URL}/favicon.png`;
+
 const config: ZudokuConfig = {
+  canonicalUrlOrigin: SITE_URL,
+  slots: {
+    "layout-after-head": ({ location }: { location: { pathname: string } }) => (
+      <Head>
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="MewCP Docs" />
+        <meta property="og:url" content={`${SITE_URL}${location.pathname}`} />
+        <meta property="og:image" content={SOCIAL_IMAGE} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:locale" content="en_US" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@mewcp_ai" />
+        <meta name="twitter:image" content={SOCIAL_IMAGE} />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: "MewCP",
+            url: SITE_URL,
+            logo: ORG_LOGO,
+            sameAs: ["https://github.com/AStheTECH", "https://x.com/mewcp_ai"],
+          })}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "MewCP Docs",
+            url: SITE_URL,
+          })}
+        </script>
+      </Head>
+    ),
+  },
   site: {
     footer: {
       position: "center",
@@ -87,6 +127,49 @@ const config: ZudokuConfig = {
     description:
       "MewCP is a platform that allows you to connect to any LLM and agent, enabling you to build AI-powered applications with ease.",
     favicon: "/favicon.png",
+    keywords: [
+      // Category / core concept
+      "MCP",
+      "Model Context Protocol",
+      "MewCP",
+      "MCP gateway",
+      "MCP server hosting",
+      "hosted MCP",
+      "AI agent tools",
+      "agent authentication",
+      "agent credentials",
+      "OAuth for AI agents",
+      "AI tool calling",
+      "function calling API",
+      "LLM tool use",
+      "agent observability",
+      "AI usage controls and rate limits",
+      "team AI access management",
+      // MCP clients
+      "Claude Desktop MCP",
+      "Claude MCP setup",
+      "MCP for VS Code",
+      "MCP for Cursor",
+      "Codex MCP",
+      "MCP TypeScript SDK",
+      "MCP Python SDK",
+      // Agent frameworks
+      "Google ADK MCP integration",
+      "CrewAI MCP",
+      "LangChain MCP",
+      "OpenAI Agents SDK MCP",
+      "Claude Agent SDK",
+      // Connected apps / integrations
+      "Google Calendar AI agent",
+      "Gmail AI agent",
+      "Notion AI agent",
+      "Slack AI agent",
+      "connect LLM to Google Workspace",
+      "connect LLM to Slack",
+      "connect LLM to Notion",
+    ],
+    applicationName: "MewCP Docs",
+    publisher: "AstheTech",
   },
   header: {
     navigation: [
@@ -195,6 +278,12 @@ const config: ZudokuConfig = {
       path: "/mewcp-auth",
     },
   ],
+  sitemap: {
+    siteUrl: SITE_URL,
+    changefreq: "weekly",
+    priority: 0.7,
+    autoLastmod: true,
+  },
 };
 
 export default config;
