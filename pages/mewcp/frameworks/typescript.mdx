@@ -18,12 +18,12 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
 const GATEWAY_URL = "https://gateway.mewcp.com/personal/mcp";
-const MEWCP_KEY = "YOUR_MEWCP_KEY";
+const MEWCP_API_KEY = "YOUR_MEWCP_KEY";
 
 const transport = new StreamableHTTPClientTransport(new URL(GATEWAY_URL), {
   requestInit: {
     headers: {
-      Authorization: `Bearer ${MEWCP_KEY}`,
+      Authorization: `Bearer ${MEWCP_API_KEY}`,
       Accept: "application/json, text/event-stream",
     },
   },
@@ -124,7 +124,7 @@ If you are managing audience member credentials via the [MewCP Auth API](/mewcp-
 const transport = new StreamableHTTPClientTransport(new URL(GATEWAY_URL), {
   requestInit: {
     headers: {
-      Authorization: `Bearer ${MEWCP_KEY}`,
+      Authorization: `Bearer ${MEWCP_API_KEY}`,
       "x-mewcp-enduser-id": currentUser.id,
     },
   },
@@ -135,7 +135,7 @@ const transport = new StreamableHTTPClientTransport(new URL(GATEWAY_URL), {
 
 ## Where to find your values
 
-| Value              | Where to get it       |
-| ------------------ | --------------------- |
-| `YOUR_MEWCP_KEY`   | Dashboard -> API Keys |
-| Connected apps     | Dashboard -> Servers  |
+| Value            | Where to get it       |
+| ---------------- | --------------------- |
+| `YOUR_MEWCP_KEY` | Dashboard -> API Keys |
+| Connected apps   | Dashboard -> Servers  |

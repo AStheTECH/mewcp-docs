@@ -123,7 +123,9 @@ const config: ZudokuConfig = {
     },
   },
   metadata: {
-    title: "Official documentation for MewCP",
+    // %s is the page's own title; pages without one get defaultTitle.
+    title: "%s | MewCP Docs",
+    defaultTitle: "Official documentation for MewCP",
     description:
       "MewCP is a platform that allows you to connect to any LLM and agent, enabling you to build AI-powered applications with ease.",
     favicon: "/favicon.png",
@@ -205,27 +207,46 @@ const config: ZudokuConfig = {
         "/mewcp/getting-started",
         {
           type: "category",
-          label: "Connect",
+          label: "Connect AI Apps",
           icon: "plug",
+          link: {
+            type: "doc",
+            file: "mewcp/connect-agents/index",
+            path: "/mewcp/connect-agents",
+          },
           items: [
-            "/mewcp/connect/claude-desktop",
-            "/mewcp/connect/vscode-cursor",
-            "/mewcp/connect/codex",
-            "/mewcp/connect/typescript",
-            "/mewcp/connect/python",
+            "/mewcp/connect-agents/claude-desktop",
+            "/mewcp/connect-agents/claude-code",
+            "/mewcp/connect-agents/vscode",
+            "/mewcp/connect-agents/cursor",
+            "/mewcp/connect-agents/codex",
+            "/mewcp/connect-agents/opencode",
+            "/mewcp/connect-agents/openclaw",
+            "/mewcp/connect-agents/antigravity",
+            "/mewcp/connect-agents/hermes",
+            "/mewcp/connect-agents/deepseek-harness",
           ],
         },
         {
           type: "category",
-          label: "Connect Agents",
+          label: "Frameworks & SDKs",
           icon: "bot",
+          link: {
+            type: "doc",
+            file: "mewcp/frameworks/index",
+            path: "/mewcp/frameworks",
+          },
           items: [
-            "/mewcp/connect-agents/google-adk",
-            "/mewcp/connect-agents/crewai",
-            "/mewcp/connect-agents/langchain-python",
-            "/mewcp/connect-agents/langchain-typescript",
-            "/mewcp/connect-agents/openai-agents",
-            "/mewcp/connect-agents/claude-sdk",
+            "/mewcp/frameworks/vercel-ai-sdk",
+            "/mewcp/frameworks/google-adk",
+            "/mewcp/frameworks/crewai",
+            "/mewcp/frameworks/langchain-python",
+            "/mewcp/frameworks/langchain-typescript",
+            "/mewcp/frameworks/langgraph",
+            "/mewcp/frameworks/openai-agents",
+            "/mewcp/frameworks/claude-sdk",
+            "/mewcp/frameworks/python",
+            "/mewcp/frameworks/typescript",
           ],
         },
         {
@@ -263,6 +284,45 @@ const config: ZudokuConfig = {
       to: "/mewcp/authentication/account-api-keys",
     },
     { from: "/mewcp/authentication", to: "/mewcp/authentication/mewcp-key" },
+    {
+      from: "/mewcp/connect-agents/vscode-cursor",
+      to: "/mewcp/connect-agents/vscode",
+    },
+    // Old /connect app guides and /connect-agents framework guides.
+    { from: "/mewcp/connect", to: "/mewcp/connect-agents" },
+    { from: "/mewcp/connect/overview", to: "/mewcp/connect-agents" },
+    {
+      from: "/mewcp/connect/claude-desktop",
+      to: "/mewcp/connect-agents/claude-desktop",
+    },
+    {
+      from: "/mewcp/connect/vscode-cursor",
+      to: "/mewcp/connect-agents/vscode",
+    },
+    { from: "/mewcp/connect/codex", to: "/mewcp/connect-agents/codex" },
+    { from: "/mewcp/connect/python", to: "/mewcp/frameworks/python" },
+    { from: "/mewcp/connect/typescript", to: "/mewcp/frameworks/typescript" },
+    {
+      from: "/mewcp/connect-agents/google-adk",
+      to: "/mewcp/frameworks/google-adk",
+    },
+    { from: "/mewcp/connect-agents/crewai", to: "/mewcp/frameworks/crewai" },
+    {
+      from: "/mewcp/connect-agents/langchain-python",
+      to: "/mewcp/frameworks/langchain-python",
+    },
+    {
+      from: "/mewcp/connect-agents/langchain-typescript",
+      to: "/mewcp/frameworks/langchain-typescript",
+    },
+    {
+      from: "/mewcp/connect-agents/openai-agents",
+      to: "/mewcp/frameworks/openai-agents",
+    },
+    {
+      from: "/mewcp/connect-agents/claude-sdk",
+      to: "/mewcp/frameworks/claude-sdk",
+    },
   ],
   docs: {
     files: "pages/**/*.{md,mdx}",

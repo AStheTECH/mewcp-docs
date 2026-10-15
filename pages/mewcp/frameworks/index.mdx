@@ -1,0 +1,91 @@
+---
+title: Connect Your Agent Framework to MewCP
+navigation_label: Overview
+description: Give agents you build with the Claude Agent SDK, OpenAI Agents SDK, Google ADK, LangChain, CrewAI and more access to every app connected in MewCP, through one MCP URL.
+---
+
+Agents you build in code connect to MewCP the same way any MCP client does: one URL and one key. Your agent gets every app connected to its toolset, and adding an app later needs no change in your code.
+
+---
+
+## Pick your framework
+
+| Framework         | Language           | Guide                                                                                               |
+| ----------------- | ------------------ | --------------------------------------------------------------------------------------------------- |
+| Claude Agent SDK  | Python             | [How to connect](/mewcp/frameworks/claude-sdk)                                                      |
+| OpenAI Agents SDK | Python             | [How to connect](/mewcp/frameworks/openai-agents)                                                   |
+| Vercel AI SDK     | TypeScript         | [How to connect](/mewcp/frameworks/vercel-ai-sdk)                                                   |
+| Google ADK        | Python             | [How to connect](/mewcp/frameworks/google-adk)                                                      |
+| LangChain         | Python, TypeScript | [Python](/mewcp/frameworks/langchain-python) · [TypeScript](/mewcp/frameworks/langchain-typescript) |
+| LangGraph         | Python             | [How to connect](/mewcp/frameworks/langgraph)                                                       |
+| CrewAI            | Python             | [How to connect](/mewcp/frameworks/crewai)                                                          |
+| MCP SDK           | Python, TypeScript | [Python](/mewcp/frameworks/python) · [TypeScript](/mewcp/frameworks/typescript)                     |
+
+Using a framework that is not listed? If it can connect to a remote MCP server over Streamable HTTP and send a custom header, it works with MewCP. Start from the [MCP SDK](/mewcp/frameworks/python) guide.
+
+---
+
+## Choose a toolset
+
+A toolset is the set of apps your agent can reach. Each one has its own MCP URL, and the key you send decides whose accounts the calls run against.
+
+|                | Personal toolset                                  | Project toolset                                         |
+| -------------- | ------------------------------------------------- | ------------------------------------------------------- |
+| Use it for     | An agent that works with your own accounts        | An agent you ship to your own users                     |
+| URL            | `https://gateway.mewcp.com/personal/mcp`          | `https://gateway.mewcp.com/<toolset-id>/mcp`            |
+| Key            | Your [MewCP Key](/mewcp/authentication/mewcp-key) | The project's key, from the project's **API Keys** page |
+| Whose accounts | Yours                                             | The user named in `x-mewcp-enduser-id`                  |
+
+You find a project toolset's URL on its page in the dashboard, under **Projects → your project → Toolsets**.
+
+---
+
+## Set your environment
+
+Every guide reads the same two variables, the same names the dashboard's **Get started** page uses:
+
+```bash
+MEWCP_MCP_URL=https://gateway.mewcp.com/personal/mcp
+MEWCP_API_KEY=YOUR_MEWCP_KEY
+```
+
+For a project toolset, set `MEWCP_MCP_URL` to the toolset's URL and `MEWCP_API_KEY` to the project's key.
+
+Your agent sends the key on every request as a header:
+
+```
+Authorization: Bearer <MEWCP_API_KEY>
+```
+
+Keep the key on your server. Never ship it in browser or mobile app code.
+
+---
+
+## Serve your own users
+
+With a project toolset, one agent serves all your users. Add one more header to each request, set to the ID of the user the agent is acting for:
+
+```
+x-mewcp-enduser-id: <your user's ID>
+```
+
+MewCP runs the call against the accounts that user connected, and no one else's. Use the same ID you pass as `externalUserId` when your users connect their accounts through the [MewCP Auth API](/mewcp-auth).
+
+How you send a per-request header depends on the framework, so each guide shows it in its **Serve your users** section.
+
+If the user has not connected the app a tool needs, the call does not fail silently. It returns a link for that user to connect the app, which your agent can hand to them.
+
+---
+
+## What your agent sees
+
+Your agent does not load the tools of every connected app. It sees four:
+
+| Tool            | What it does                                     |
+| --------------- | ------------------------------------------------ |
+| `search`        | Find tools by keyword across every connected app |
+| `get_schema`    | Get the parameters for the tools it picked       |
+| `list_accounts` | List the accounts connected for one app          |
+| `call_tool`     | Run the tool                                     |
+
+The agent uses them in that order, so it can still pick the right tool when the toolset holds hundreds. Keeping the list to four keeps every request small, however many apps you connect. See [How MewCP works](/mewcp/getting-started#how-mewcp-works) for more.

@@ -1,0 +1,140 @@
+---
+title: How to Connect OpenCode to MewCP
+navigation_label: OpenCode
+description: Add MewCP to OpenCode's opencode.json and reach every app you have connected from the OpenCode terminal agent.
+---
+
+Add MewCP to OpenCode once, and OpenCode can use every app you have connected in MewCP: Gmail, Calendar, Slack, GitHub and the rest. OpenCode connects to MewCP directly over HTTP, so there is nothing to install.
+
+---
+
+## Before you start
+
+- **OpenCode** installed ([install guide](https://opencode.ai/docs/))
+- **A MewCP Key** from **Dashboard → API Keys**, see [MewCP Key](/mewcp/authentication/mewcp-key)
+- **At least one app connected** in the dashboard under **Servers**
+
+---
+
+## Set up MewCP
+
+<Stepper>
+
+1. **Open the config file**
+
+   OpenCode reads its config from these files and merges them:
+
+   | File                               | MewCP loads in                                        |
+   | ---------------------------------- | ----------------------------------------------------- |
+   | `~/.config/opencode/opencode.json` | Every project                                         |
+   | `opencode.json` in a project root  | That project only, for everyone who opens it from git |
+
+   Create the file if it does not exist.
+
+1. **Add MewCP**
+
+   Paste this into the file and replace `YOUR_MEWCP_KEY` with your key:
+
+   ```json
+   {
+     "$schema": "https://opencode.ai/config.json",
+     "mcp": {
+       "mewcp": {
+         "type": "remote",
+         "url": "https://gateway.mewcp.com/personal/mcp",
+         "enabled": true,
+         "oauth": false,
+         "headers": {
+           "Authorization": "Bearer YOUR_MEWCP_KEY"
+         }
+       }
+     }
+   }
+   ```
+
+   Already have an `mcp` section? Add only the `"mewcp": { ... }` entry inside it.
+
+   Keep `"oauth": false`. MewCP signs in with your key, not OAuth, and without this line OpenCode tries to start an OAuth sign-in whenever MewCP answers `401`.
+
+1. **Restart OpenCode**
+
+   Quit OpenCode and start it again so it loads the new server.
+
+</Stepper>
+
+This is the entire configuration. One entry reaches every app you have connected, and connecting another app later needs no change here.
+
+### Keep the key out of the file
+
+OpenCode can read the key from an environment variable or a file instead. Use either value for the header:
+
+```json
+"Authorization": "Bearer {env:MEWCP_API_KEY}"
+```
+
+```json
+"Authorization": "Bearer {file:~/.secrets/mewcp-key}"
+```
+
+For `{env:MEWCP_API_KEY}`, set `export MEWCP_API_KEY="YOUR_MEWCP_KEY"` in your shell profile. For `{file:...}`, the file holds the key alone. Either way, a project's `opencode.json` can then go into git without your key.
+
+---
+
+## Check it works
+
+Run:
+
+```bash
+opencode mcp list
+```
+
+`mewcp` should be listed. To test the connection itself, run `opencode mcp debug mewcp`.
+
+You will see four tools, not the tools of every app: `search`, `get_schema`, `list_accounts` and `call_tool`. That is expected. OpenCode uses them to find and run the right tool for whatever you ask. See [How MewCP works](/mewcp/getting-started#how-mewcp-works).
+
+Then ask for something from an app you have connected. Adding `use mewcp` tells OpenCode which tools to reach for:
+
+```
+What is on my calendar tomorrow? use mewcp
+```
+
+---
+
+## Troubleshooting
+
+### OpenCode asks you to sign in, or opens a browser for MewCP
+
+OpenCode starts an OAuth sign-in when a server answers `401`. Add `"oauth": false` to the `mewcp` entry, then fix the key as below.
+
+### MewCP returns `401` or `403`
+
+MewCP rejected the key.
+
+- Check the header reads `Bearer ` followed by the whole key, which starts with `mcp_live_`.
+- With `{env:MEWCP_API_KEY}`, check the variable is set in the terminal you start OpenCode from: `echo $MEWCP_API_KEY`. OpenCode replaces an unset variable with an empty string, so MewCP receives no key.
+- A `403` that says the billing period is not active means your MewCP plan needs renewing in the dashboard.
+
+### MewCP's tools do not load on a slow connection
+
+OpenCode waits 5 seconds for a server's tools. Raise the limit with `timeout`, in milliseconds:
+
+```json
+"mewcp": {
+  "type": "remote",
+  "url": "https://gateway.mewcp.com/personal/mcp",
+  "enabled": true,
+  "oauth": false,
+  "timeout": 15000,
+  "headers": {
+    "Authorization": "Bearer YOUR_MEWCP_KEY"
+  }
+}
+```
+
+### A change to the config does nothing
+
+OpenCode merges the global and project files, and the project's `opencode.json` wins for the same key. If MewCP is defined in both, edit the project's entry. Run `opencode debug config` to see the config OpenCode actually uses.
+
+---
+
+_Last checked against OpenCode's documentation on 13 October 2026._

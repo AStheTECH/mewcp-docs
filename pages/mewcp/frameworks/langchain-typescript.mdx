@@ -16,7 +16,7 @@ npm install @langchain/mcp-adapters
 ```typescript
 import { MultiServerMCPClient } from "@langchain/mcp-adapters";
 
-const MEWCP_KEY = "YOUR_MEWCP_KEY";
+const MEWCP_API_KEY = "YOUR_MEWCP_KEY";
 
 async function main() {
   const client = new MultiServerMCPClient({
@@ -24,7 +24,7 @@ async function main() {
       mewcp: {
         url: "https://gateway.mewcp.com/personal/mcp",
         headers: {
-          Authorization: `Bearer ${MEWCP_KEY}`,
+          Authorization: `Bearer ${MEWCP_API_KEY}`,
         },
       },
     },
@@ -83,7 +83,7 @@ async function main() {
     mcpServers: {
       mewcp: {
         url: "https://gateway.mewcp.com/personal/mcp",
-        headers: { Authorization: `Bearer ${MEWCP_KEY}` },
+        headers: { Authorization: `Bearer ${MEWCP_API_KEY}` },
       },
     },
   });

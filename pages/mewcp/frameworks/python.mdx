@@ -18,9 +18,9 @@ import asyncio
 from fastmcp import Client
 
 GATEWAY_URL = "https://gateway.mewcp.com/personal/mcp"
-MEWCP_KEY = "YOUR_MEWCP_KEY"
+MEWCP_API_KEY = "YOUR_MEWCP_KEY"
 
-headers = {"Authorization": f"Bearer {MEWCP_KEY}"}
+headers = {"Authorization": f"Bearer {MEWCP_API_KEY}"}
 
 async def main():
     client = Client(GATEWAY_URL, headers=headers)
@@ -103,7 +103,7 @@ If you are managing audience member credentials via the [MewCP Auth API](/mewcp-
 
 ```python
 headers = {
-    "Authorization": f"Bearer {MEWCP_KEY}",
+    "Authorization": f"Bearer {MEWCP_API_KEY}",
     "x-mewcp-enduser-id": current_user.id,
 }
 ```

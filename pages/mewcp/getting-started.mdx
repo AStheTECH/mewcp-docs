@@ -13,14 +13,13 @@ By the end of this tutorial you will have Claude Desktop connected to MewCP, wit
 
 - A MewCP account ([sign up](https://mewcp.com))
 - Claude Desktop installed ([download](https://claude.ai/download))
-- Node.js installed (needed by the `mcp-remote` bridge Claude Desktop uses)
+- Node.js 18 or newer (needed by the `mcp-remote` bridge Claude Desktop uses)
 
 ---
 
 <Stepper>
 
 1. **Connect an app**
-
    1. Log in to the [MewCP dashboard](https://mewcp.com/dashboard)
    1. Go to **Servers** and pick **Google Calendar**
    1. Click **Connect account** and sign in with Google
@@ -30,7 +29,6 @@ By the end of this tutorial you will have Claude Desktop connected to MewCP, wit
    Connect as many apps as you like, now or later. Every one of them is reachable through the same setup below.
 
 1. **Get your MewCP Key**
-
    1. In the dashboard go to **API Keys**
    1. Copy your **MewCP Key**
 
@@ -40,14 +38,14 @@ By the end of this tutorial you will have Claude Desktop connected to MewCP, wit
 
 1. **Connect Claude Desktop**
 
-   Open your Claude Desktop config file:
+   In Claude Desktop, open **Settings → Developer** and click **Edit Config**. This opens the config file:
 
    | Platform | Path                                                              |
    | -------- | ----------------------------------------------------------------- |
    | macOS    | `~/Library/Application Support/Claude/claude_desktop_config.json` |
    | Windows  | `%APPDATA%\Claude\claude_desktop_config.json`                     |
 
-   Replace `your_key_here` with the key you just copied:
+   Paste this into it, replacing `YOUR_MEWCP_KEY` with the key you just copied:
 
    ```json
    {
@@ -59,10 +57,10 @@ By the end of this tutorial you will have Claude Desktop connected to MewCP, wit
            "mcp-remote@latest",
            "https://gateway.mewcp.com/personal/mcp",
            "--header",
-           "Authorization: Bearer ${MEWCP_KEY}"
+           "Authorization:${AUTH_HEADER}"
          ],
          "env": {
-           "MEWCP_KEY": "your_key_here"
+           "AUTH_HEADER": "Bearer YOUR_MEWCP_KEY"
          }
        }
      }
@@ -71,9 +69,9 @@ By the end of this tutorial you will have Claude Desktop connected to MewCP, wit
 
    That is the whole config, and it does not change when you connect more apps.
 
-   Save the file and **restart Claude Desktop**.
+   Save the file, then quit Claude Desktop completely and open it again.
 
-   You will see a tools icon appear in the chat panel confirming MewCP is connected.
+   To confirm it connected, click **+** in the message box and go to **Connectors**: MewCP should be listed. If it is not, see [How to Connect Claude Desktop to MewCP](/mewcp/connect-agents/claude-desktop#troubleshooting).
 
 1. **Ask for something** 🚀
 
@@ -122,6 +120,6 @@ Expired access is refreshed for you. If an app is not connected yet, or access w
 
 ## What's next
 
-- **Other clients**: Connect via [VS Code and Cursor](/mewcp/connect/vscode-cursor), [TypeScript](/mewcp/connect/typescript), [Python](/mewcp/connect/python), or [Codex](/mewcp/connect/codex)
-- **AI agent frameworks**: Wire MewCP into [Google ADK](/mewcp/connect-agents/google-adk), [LangChain](/mewcp/connect-agents/langchain-python), [CrewAI](/mewcp/connect-agents/crewai), and more
+- **Other clients**: Connect via [VS Code](/mewcp/connect-agents/vscode), [Cursor](/mewcp/connect-agents/cursor), [Claude Code](/mewcp/connect-agents/claude-code), [TypeScript](/mewcp/frameworks/typescript), [Python](/mewcp/frameworks/python), or [Codex](/mewcp/connect-agents/codex)
+- **AI agent frameworks**: Wire MewCP into [Google ADK](/mewcp/frameworks/google-adk), [LangChain](/mewcp/frameworks/langchain-python), [CrewAI](/mewcp/frameworks/crewai), and more
 - **B2B / multi-user apps**: Use the [MewCP Auth API](/mewcp-auth) to manage credentials for your audience

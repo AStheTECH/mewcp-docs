@@ -1,56 +1,115 @@
 ---
-title: OpenAI Codex
-description: Connect MewCP to the OpenAI Codex CLI.
+title: How to Connect Codex to MewCP
+navigation_label: Codex
+description: Add MewCP to OpenAI Codex's config.toml and reach every app you have connected from the Codex CLI, IDE extension and ChatGPT desktop app.
 ---
 
-## Prerequisites
+Add MewCP to Codex once, and Codex can use every app you have connected in MewCP: Gmail, Calendar, Slack, GitHub and the rest. Codex connects to MewCP directly over HTTP, so there is nothing to install.
 
-- Codex CLI installed: `npm install -g @openai/codex`
-- A MewCP Key, see [Authentication](/mewcp/authentication)
-- At least one app connected in the dashboard under **Servers**
+The Codex CLI, the Codex IDE extension and the ChatGPT desktop app share one config file, so setting it up once covers all three.
 
 ---
 
-## Configuration
+## Before you start
 
-Add MewCP to `~/.codex/config.yaml`:
+- **Codex** installed. For the CLI, check with `codex --version`, or see the [Codex docs](https://developers.openai.com/codex)
+- **A MewCP Key** from **Dashboard → API Keys**, see [MewCP Key](/mewcp/authentication/mewcp-key)
+- **At least one app connected** in the dashboard under **Servers**
 
-```yaml
-mcpServers:
-  mewcp:
-    type: http
-    url: https://gateway.mewcp.com/personal/mcp
-    headers:
-      Authorization: "Bearer MEWCP_KEY"
+---
+
+## Set up MewCP
+
+Codex reads MCP servers from `~/.codex/config.toml`. The file is TOML, not JSON or YAML, and each server is a `[mcp_servers.<name>]` table. Create the file if it does not exist.
+
+Choose how Codex gets your key:
+
+### Key in an environment variable (recommended)
+
+Add this to `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.mewcp]
+url = "https://gateway.mewcp.com/personal/mcp"
+bearer_token_env_var = "MEWCP_API_KEY"
 ```
 
-MewCP will be available on the next `codex` invocation.
-
-This is the entire configuration. Every app you have connected is reachable through this one entry, and connecting another app in the dashboard needs no change here.
-
----
-
-## What you will see
-
-Codex will list four tools rather than the tools of each app: `search`, `get_schema`, `list_accounts`, and `call_tool`. It uses them to find and run the right tool for whatever you ask.
-
-See [How MewCP works](/mewcp/getting-started#how-mewcp-works) for the detail.
-
----
-
-## Try it
-
-Ask for something from an app you have connected:
+Then set the variable in your shell profile (`~/.zshrc` or `~/.bashrc`) and open a new terminal:
 
 ```bash
-codex "Check my calendar for tomorrow and summarise the day"
+export MEWCP_API_KEY="YOUR_MEWCP_KEY"
+```
+
+Codex sends `Authorization: Bearer <your key>` for you, so set the variable to the key alone.
+
+### Key in the file
+
+If you start Codex from somewhere that does not load your shell profile, such as the ChatGPT desktop app, put the header in the file instead:
+
+```toml
+[mcp_servers.mewcp]
+url = "https://gateway.mewcp.com/personal/mcp"
+http_headers = { "Authorization" = "Bearer YOUR_MEWCP_KEY" }
+```
+
+This is the entire configuration either way. One entry reaches every app you have connected, and connecting another app later needs no change here.
+
+MewCP loads the next time you start Codex. In the IDE extension, choose **Restart extension**. In the ChatGPT desktop app, choose **Restart** under **Settings → MCP servers**.
+
+### Only in one project
+
+To use MewCP in a single project, put the same table in `.codex/config.toml` inside that project. Codex reads project config only for projects you have marked as trusted.
+
+---
+
+## Check it works
+
+Run:
+
+```bash
+codex mcp list
+```
+
+`mewcp` should be listed. Inside the `codex` terminal UI, type `/mcp` to see your active servers.
+
+You will see four tools, not the tools of every app: `search`, `get_schema`, `list_accounts` and `call_tool`. That is expected. Codex uses them to find and run the right tool for whatever you ask. See [How MewCP works](/mewcp/getting-started#how-mewcp-works).
+
+Then ask for something from an app you have connected:
+
+```bash
+codex "What is on my calendar tomorrow?"
 ```
 
 ---
 
-## Where to find your values
+## Troubleshooting
 
-| Value          | Where to get it       |
-| -------------- | --------------------- |
-| `MEWCP_KEY`    | Dashboard -> API Keys |
-| Connected apps | Dashboard -> Servers  |
+### Codex ignores the MewCP entry
+
+- Check the file is `~/.codex/config.toml` and the entry is a TOML table named `[mcp_servers.mewcp]`. Codex does not read `mcpServers` blocks in JSON or YAML, which older guides show.
+- For `.codex/config.toml` inside a project, check you have trusted that project.
+
+### MewCP returns `401`
+
+Codex connects without a key when it cannot find one, so a missing key shows up as a `401` from MewCP.
+
+- With `bearer_token_env_var`, check `MEWCP_API_KEY` is set where you start Codex: `echo $MEWCP_API_KEY`. The variable holds the key alone, without `Bearer`.
+- With `http_headers`, check the value reads `Bearer ` followed by the whole key, which starts with `mcp_live_`.
+
+A `403` that says the billing period is not active means your MewCP plan needs renewing in the dashboard.
+
+### MewCP times out at startup or during a tool call
+
+Codex waits 10 seconds for a server to start and 60 seconds for a tool to finish. On a slow network, raise the limits:
+
+```toml
+[mcp_servers.mewcp]
+url = "https://gateway.mewcp.com/personal/mcp"
+bearer_token_env_var = "MEWCP_API_KEY"
+startup_timeout_sec = 30
+tool_timeout_sec = 120
+```
+
+---
+
+_Last checked against Codex's documentation on 13 October 2026._

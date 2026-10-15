@@ -1,0 +1,118 @@
+---
+title: How to Connect OpenClaw to MewCP
+navigation_label: OpenClaw
+description: Add MewCP to your OpenClaw gateway and give your OpenClaw agents every app you have connected in MewCP.
+---
+
+Add MewCP to OpenClaw once, and your OpenClaw agents can use every app you have connected in MewCP: Gmail, Calendar, Slack, GitHub and the rest. OpenClaw connects to MewCP directly over Streamable HTTP, so there is nothing to install.
+
+---
+
+## Before you start
+
+- **OpenClaw** installed with its Gateway set up ([OpenClaw docs](https://docs.openclaw.ai/))
+- **A MewCP Key** from **Dashboard → API Keys**, see [MewCP Key](/mewcp/authentication/mewcp-key)
+- **At least one app connected** in the dashboard under **Servers**
+
+---
+
+## Set up MewCP
+
+<Stepper>
+
+1. **Make the key available to the Gateway**
+
+   Set `MEWCP_API_KEY` in the environment the OpenClaw Gateway runs in, for example in your shell profile or the Gateway service's environment:
+
+   ```bash
+   export MEWCP_API_KEY="YOUR_MEWCP_KEY"
+   ```
+
+   OpenClaw's `doctor` warns about keys written straight into the config, so keep the key in the environment and refer to it as `${MEWCP_API_KEY}`.
+
+1. **Add MewCP to the config**
+
+   Open `~/.openclaw/openclaw.json` and add the `mewcp` entry under `mcp.servers`:
+
+   ```json5
+   {
+     mcp: {
+       servers: {
+         mewcp: {
+           url: "https://gateway.mewcp.com/personal/mcp",
+           transport: "streamable-http",
+           enabled: true,
+           headers: {
+             Authorization: "Bearer ${MEWCP_API_KEY}",
+           },
+         },
+       },
+     },
+   }
+   ```
+
+   Already have an `mcp.servers` section? Add only the `mewcp: { ... }` entry inside it.
+
+   Keep `transport: "streamable-http"`. Leave out `auth: "oauth"`: MewCP signs in with your key, not OAuth.
+
+1. **Check it connects**
+
+   ```bash
+   openclaw mcp doctor mewcp --probe
+   ```
+
+   Saving a server proves nothing about reachability. `--probe` opens a live connection and lists the tools MewCP offers.
+
+</Stepper>
+
+This is the entire configuration. One entry reaches every app you have connected, and connecting another app later needs no change here.
+
+With Gateway hot reload on, the next agent turn picks up the new server. Otherwise restart the Gateway.
+
+### From the Control UI instead
+
+Open **Settings → MCP**, select **Add server**, name it `mewcp`, choose **Streamable HTTP** and enter `https://gateway.mewcp.com/personal/mcp`. Then add the `Authorization` header in the config editor further down the same page, since the add dialog only takes the name and URL.
+
+---
+
+## Check it works
+
+`openclaw mcp doctor mewcp --probe` should connect and list four tools, not the tools of every app: `search`, `get_schema`, `list_accounts` and `call_tool`. That is expected. Your agents use them to find and run the right tool for whatever you ask. See [How MewCP works](/mewcp/getting-started#how-mewcp-works).
+
+Then ask an agent, in any channel it listens on, for something from an app you have connected:
+
+```
+What is on my calendar tomorrow?
+```
+
+---
+
+## Troubleshooting
+
+### The probe returns `401` or `403`
+
+MewCP rejected the key.
+
+- Check `MEWCP_API_KEY` is set in the Gateway's environment, not only in your terminal, and holds the whole key, which starts with `mcp_live_`.
+- Check the header value reads `Bearer ${MEWCP_API_KEY}`, with the space after `Bearer`.
+- A `403` that says the billing period is not active means your MewCP plan needs renewing in the dashboard.
+
+### `openclaw mcp add` or `configure` refuses to run
+
+The CLI commands that change saved servers, and `--probe`, need the local Gateway stopped. Stop it, run the command, then start it again. Or make the change in the Control UI under **Settings → MCP**, which works while the Gateway runs.
+
+### Changes do not reach a running agent
+
+`openclaw mcp reload` only refreshes the current CLI process. A Gateway or agent running in another process needs its own reload or a restart.
+
+### MewCP keeps failing after you fixed the key
+
+When OpenClaw cannot start a server, it waits before trying again, starting at 30 seconds and doubling up to 10 minutes. A config change, a successful connection, or an MCP reload in the Gateway clears the wait.
+
+### MewCP's tools do not show up for an agent
+
+OpenClaw shows MCP tools in the `coding` and `messaging` tool profiles, not in `minimal`. Also check your tool policy does not deny them, for example with `tools.deny: ["bundle-mcp"]` or `tools.deny: ["mewcp__*"]`.
+
+---
+
+_Last checked against OpenClaw's documentation on 13 October 2026._

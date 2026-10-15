@@ -1,0 +1,149 @@
+---
+title: How to Connect Claude Code to MewCP
+navigation_label: Claude Code
+description: Add MewCP to Claude Code with one command and reach every app you have connected, in every project or shared with your team.
+---
+
+Add MewCP to Claude Code once, and Claude can use every app you have connected in MewCP: Gmail, Calendar, Slack, GitHub and the rest. Claude Code connects to MewCP directly over HTTP, so there is nothing to install.
+
+There are two ways to set it up:
+
+| Method                                             | MewCP loads in                         | Best for                      |
+| -------------------------------------------------- | -------------------------------------- | ----------------------------- |
+| [One command](#option-a-one-command)               | Every project on your machine          | Most people                   |
+| [`.mcp.json` file](#option-b-mcpjson-in-a-project) | One project, for everyone who opens it | Sharing the setup with a team |
+
+---
+
+## Before you start
+
+- **Claude Code** installed. Check with `claude --version`, or see [Claude Code setup](https://code.claude.com/docs/en/setup)
+- **A MewCP Key** from **Dashboard → API Keys**, see [MewCP Key](/mewcp/authentication/mewcp-key)
+- **At least one app connected** in the dashboard under **Servers**
+
+---
+
+## Option A: One command
+
+Run this in your terminal, replacing `YOUR_MEWCP_KEY` with your key:
+
+```bash
+claude mcp add --transport http --scope user mewcp https://gateway.mewcp.com/personal/mcp \
+  --header "Authorization: Bearer YOUR_MEWCP_KEY"
+```
+
+Claude Code prints an `Added ...` line when it has saved the server.
+
+Keep `--scope user`. Without it, Claude Code uses its default **local** scope and MewCP loads only in the folder you ran the command from.
+
+This is the entire configuration. One entry reaches every app you have connected, and connecting another app later needs no change here.
+
+---
+
+## Option B: `.mcp.json` in a project
+
+Use this to share MewCP with everyone who works in a repository. Each person still uses their own key, so each of them reaches their own apps.
+
+<Stepper>
+
+1. **Add the file**
+
+   Create `.mcp.json` in the project root, or add the `mewcp` entry to the one you have:
+
+   ```json
+   {
+     "mcpServers": {
+       "mewcp": {
+         "type": "http",
+         "url": "https://gateway.mewcp.com/personal/mcp",
+         "headers": {
+           "Authorization": "Bearer ${MEWCP_API_KEY}"
+         }
+       }
+     }
+   }
+   ```
+
+   Keep `"type": "http"`. Claude Code reads an entry without a `type` as a local command and skips it.
+
+   `${MEWCP_API_KEY}` is read from each person's environment, so the key never goes into version control. You can commit this file.
+
+1. **Set your key**
+
+   Add your key to your shell profile (`~/.zshrc` or `~/.bashrc`), then open a new terminal:
+
+   ```bash
+   export MEWCP_API_KEY="YOUR_MEWCP_KEY"
+   ```
+
+1. **Approve the server**
+
+   Run `claude` in the project. Claude Code asks before it uses a server from a project's `.mcp.json` for the first time. Approve `mewcp`.
+
+</Stepper>
+
+---
+
+## Check it works
+
+Run:
+
+```bash
+claude mcp list
+```
+
+`mewcp` should show `✔ Connected`. Inside a Claude Code session, `/mcp` shows the same status and lets you see MewCP's tools.
+
+You will see four tools, not the tools of every app: `search`, `get_schema`, `list_accounts` and `call_tool`. That is expected. Claude uses them to find and run the right tool for whatever you ask. See [How MewCP works](/mewcp/getting-started#how-mewcp-works).
+
+Then ask for something from an app you have connected:
+
+```
+What is on my calendar tomorrow?
+```
+
+If you have two accounts connected for the same app, say which one you mean:
+
+```
+Check my work Gmail for anything from the design team.
+```
+
+---
+
+## Troubleshooting
+
+### MewCP works in one project but not in others
+
+It was added with the default local scope, which belongs to the folder you ran the command in. Remove it there and add it again for all projects:
+
+```bash
+claude mcp remove mewcp --scope local
+claude mcp add --transport http --scope user mewcp https://gateway.mewcp.com/personal/mcp \
+  --header "Authorization: Bearer YOUR_MEWCP_KEY"
+```
+
+### `claude mcp list` shows `✘ Failed to connect`
+
+Usually MewCP rejected the key.
+
+- Check the header reads `Authorization: Bearer ` followed by the whole key, which starts with `mcp_live_`.
+- With `.mcp.json`, check `MEWCP_API_KEY` is set in the terminal you start Claude from: `echo $MEWCP_API_KEY`. If it is not set, Claude Code sends the literal text `${MEWCP_API_KEY}` and `claude mcp list` warns about a missing variable.
+- A `403` that says the billing period is not active means your MewCP plan needs renewing in the dashboard.
+
+Claude Code does not retry an authentication error on its own. After fixing the key, start a new session, or open `/mcp` and reconnect `mewcp`.
+
+### The key is set but MewCP still gets no key
+
+Claude Code never puts some credential variables into a remote server's headers, such as `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN` and `NPM_TOKEN`. They read as empty, so MewCP receives `Bearer` with no key. Use a variable with a name of your own, such as `MEWCP_API_KEY`, as in the example above.
+
+### `has a "url" but no "type"`
+
+The `.mcp.json` entry is missing `"type": "http"`. Add it next to `url`.
+
+### `⏸ Pending approval`
+
+The server comes from a project's `.mcp.json` and you have not approved it yet. Run `claude` in the project and approve it. To see the approval prompt again after declining, run `claude mcp reset-project-choices`.
+
+---
+
+_Last checked against Claude Code's documentation on 13 October 2026._

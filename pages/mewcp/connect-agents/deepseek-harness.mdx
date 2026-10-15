@@ -1,0 +1,113 @@
+---
+title: How to Connect DeepSeek Harness to MewCP
+navigation_label: DeepSeek Harness
+description: Add MewCP to DeepSeek Harness (dsh) with its built-in MCP client plugin and reach every app you have connected.
+---
+
+Add MewCP to DeepSeek Harness once, and `dsh` can use every app you have connected in MewCP: Gmail, Calendar, Slack, GitHub and the rest. DeepSeek Harness connects to MewCP through its built-in `@deepseek-ai/dsh-mcp-client` plugin over Streamable HTTP, so there is nothing extra to install.
+
+---
+
+## Before you start
+
+- **DeepSeek Harness** installed and running, for example with `npx @deepseek-ai/dsh web` ([DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness))
+- **A MewCP Key** from **Dashboard → API Keys**, see [MewCP Key](/mewcp/authentication/mewcp-key)
+- **At least one app connected** in the dashboard under **Servers**
+
+---
+
+## Set up MewCP
+
+DeepSeek Harness keeps its files in `~/.dsh`, or in `$DSH_HOME` if you have set it.
+
+<Stepper>
+
+1. **Store your key**
+
+   Add your key to `~/.dsh/.env`:
+
+   ```bash
+   MEWCP_API_KEY=YOUR_MEWCP_KEY
+   ```
+
+1. **Add MewCP to a patch file**
+
+   Open `~/.dsh/cordis.patch.yml`, which applies to every profile, and add this:
+
+   ```yaml
+   - insert:
+       - id: mcp-mewcp
+         name: "@deepseek-ai/dsh-mcp-client"
+         config:
+           serverName: mewcp
+           transport: streamable-http
+           url: https://gateway.mewcp.com/personal/mcp
+           headers:
+             Authorization: !!js "`Bearer ${process.env.MEWCP_API_KEY}`"
+   ```
+
+   To add MewCP to one profile only, use `~/.dsh/profiles/<name>/cordis.patch.yml` instead. For the web UI started with `dsh web`, that is `~/.dsh/profiles/web/cordis.patch.yml`.
+
+   If the file already has patches, add the `insert` entry next to them. Do not replace the file.
+
+1. **Restart DeepSeek Harness**
+
+   Stop `dsh` and start it again so it loads the patch.
+
+</Stepper>
+
+This is the entire configuration. One entry reaches every app you have connected, and connecting another app later needs no change here.
+
+To try MewCP for one run without changing your patch files, save the same YAML anywhere and pass it with `--patch`:
+
+```bash
+dsh web --patch /path/to/mewcp.cordis.yml
+```
+
+---
+
+## Check it works
+
+Confirm the entry is in the config DeepSeek Harness uses:
+
+```bash
+dsh web --dump-config | grep -A8 mcp-mewcp
+```
+
+The output shows the `!!js` expression, not your key, since it does not evaluate expressions when printing.
+
+Once `dsh` is running, MewCP's tools appear as `mcp__mewcp__search`, `mcp__mewcp__get_schema`, `mcp__mewcp__list_accounts` and `mcp__mewcp__call_tool`. That is four tools, not the tools of every app, which is expected. DeepSeek Harness uses them to find and run the right tool for whatever you ask. See [How MewCP works](/mewcp/getting-started#how-mewcp-works).
+
+Then ask for something from an app you have connected:
+
+```
+What is on my calendar tomorrow?
+```
+
+---
+
+## Troubleshooting
+
+### `dsh` starts, but no MewCP tools appear
+
+If the first connection to MewCP fails, DeepSeek Harness still starts, logs an error and shows no tools from MewCP. Look for the error in the `dsh` output. To make a failed connection stop startup instead, add `failOnStartupError: true` under `config`. A startup failure names a log file under `~/.dsh/logs/`.
+
+### MewCP returns `401` or `403`
+
+MewCP rejected the key.
+
+- Check `MEWCP_API_KEY` is in `~/.dsh/.env` or your shell environment, and holds the whole key, which starts with `mcp_live_`.
+- Keep the backticks inside the quotes in ``'`Bearer ${process.env.MEWCP_API_KEY}`'``. Without them, `${...}` is sent as literal text.
+- A `403` that says the billing period is not active means your MewCP plan needs renewing in the dashboard.
+
+### The entry fails to load with a name error
+
+Each MCP entry needs a unique `id` and `serverName`. If another entry already uses `mewcp`, the later one fails to load. Rename one of them.
+
+### MewCP's tools disappeared after a network outage
+
+DeepSeek Harness reconnects on its own, waiting longer each time up to 30 seconds. After 10 failed attempts in a row it removes MewCP's tools and stops trying. Restart `dsh` to connect again.
+
+---
+
+_Last checked against DeepSeek Harness's documentation on 13 October 2026._

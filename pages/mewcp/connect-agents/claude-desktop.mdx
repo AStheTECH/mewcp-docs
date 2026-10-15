@@ -1,73 +1,123 @@
 ---
-title: Claude Desktop
-description: Connect MewCP to Claude Desktop.
+title: How to Connect Claude Desktop to MewCP
+navigation_label: Claude Desktop
+description: Connect Claude Desktop to MewCP with one config entry and reach every app you have connected, on macOS and Windows.
 ---
 
-## Prerequisites
+Add MewCP to Claude Desktop once, and Claude can use every app you have connected in MewCP: Gmail, Calendar, Slack, GitHub and the rest. Connecting another app later needs no change in Claude.
 
-- Claude Desktop installed ([download](https://claude.ai/download))
-- Node.js installed (used by the `mcp-remote` bridge)
-- A MewCP Key, see [Authentication](/mewcp/authentication)
-- At least one app connected in the dashboard under **Servers**
+There are two ways to set it up:
 
----
+| Method                                                       | Works for            | Needs                                 |
+| ------------------------------------------------------------ | -------------------- | ------------------------------------- |
+| [Config file](#option-a-config-file)                         | Everyone             | Node.js 18 or newer                   |
+| [Custom connector](#option-b-custom-connector-with-your-key) | Some Claude accounts | The **Request headers** option (beta) |
 
-## Configuration
-
-Open your Claude Desktop config file:
-
-| Platform | Path                                                              |
-| -------- | ----------------------------------------------------------------- |
-| macOS    | `~/Library/Application Support/Claude/claude_desktop_config.json` |
-| Windows  | `%APPDATA%\Claude\claude_desktop_config.json`                     |
-
-Add MewCP under `mcpServers`:
-
-```json
-{
-  "mcpServers": {
-    "mewcp": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "mcp-remote@latest",
-        "https://gateway.mewcp.com/personal/mcp",
-        "--header",
-        "Authorization: Bearer ${MEWCP_KEY}"
-      ],
-      "env": {
-        "MEWCP_KEY": "your_key_here"
-      }
-    }
-  }
-}
-```
-
-Save the file and restart Claude Desktop. A tools icon will appear in the chat panel when MewCP is connected.
-
-This is the entire configuration. Every app you have connected is reachable through this one entry, and connecting another app in the dashboard needs no change here.
+If you are not sure, use the config file.
 
 ---
 
-## What you will see
+## Before you start
 
-Claude will list four tools rather than the tools of each app: `search`, `get_schema`, `list_accounts`, and `call_tool`. That is expected. Claude uses them to find and run the right tool for whatever you ask, so you keep asking in plain language.
-
-See [How MewCP works](/mewcp/getting-started#how-mewcp-works) for the detail.
+- **Claude Desktop** for macOS or Windows, updated to the latest version ([download](https://claude.ai/download))
+- **A MewCP Key** from **Dashboard → API Keys**, see [MewCP Key](/mewcp/authentication/mewcp-key)
+- **At least one app connected** in the dashboard under **Servers**
+- **Node.js 18 or newer** for the config file method. Check with `node --version`, or install the LTS version from [nodejs.org](https://nodejs.org/)
 
 ---
 
-## Try it
+## Option A: Config file
 
-Ask for something from an app you have connected:
+Claude Desktop's config file only runs local servers, so this method uses [`mcp-remote`](https://github.com/geelen/mcp-remote), a small bridge that `npx` downloads and runs for you, to reach MewCP's gateway.
+
+<Stepper>
+
+1. **Open the config file**
+
+   In Claude Desktop, open **Settings → Developer** and click **Edit Config**. This creates the file if it does not exist yet. It lives at:
+
+   | Platform | Path                                                              |
+   | -------- | ----------------------------------------------------------------- |
+   | macOS    | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+   | Windows  | `%APPDATA%\Claude\claude_desktop_config.json`                     |
+
+1. **Add MewCP**
+
+   Paste this into the file and replace `YOUR_MEWCP_KEY` with your key:
+
+   ```json
+   {
+     "mcpServers": {
+       "mewcp": {
+         "command": "npx",
+         "args": [
+           "-y",
+           "mcp-remote@latest",
+           "https://gateway.mewcp.com/personal/mcp",
+           "--header",
+           "Authorization:${AUTH_HEADER}"
+         ],
+         "env": {
+           "AUTH_HEADER": "Bearer YOUR_MEWCP_KEY"
+         }
+       }
+     }
+   }
+   ```
+
+   Already have an `mcpServers` section? Add only the `"mewcp": { ... }` entry inside it.
+
+   Keep `Authorization:${AUTH_HEADER}` exactly as written, with no spaces. Claude Desktop on Windows does not escape spaces inside `args`, which breaks a header written as `Authorization: Bearer ...`. The space after `Bearer` is fine where it is, inside `env`.
+
+1. **Restart Claude Desktop**
+
+   Quit the app completely, then open it again. Closing the window is not enough: use **Claude → Quit Claude** on macOS, or right-click the Claude icon in the system tray and choose **Quit** on Windows.
+
+</Stepper>
+
+This is the entire configuration. One entry reaches every app you have connected.
+
+---
+
+## Option B: Custom connector with your key
+
+A custom connector adds MewCP from Claude's settings instead of a file, with no Node.js. It also syncs to claude.ai and the Claude mobile apps.
+
+MewCP authenticates with your key, so this method needs the **Request headers** option in the connector dialog. Anthropic is rolling it out as a beta to a limited set of accounts. If you do not see **Request headers**, use [Option A](#option-a-config-file).
+
+<Stepper>
+
+1. Go to **Customize → Connectors**, click **+ Add**, then **Add custom connector**
+1. Name it `MewCP` and enter the server URL `https://gateway.mewcp.com/personal/mcp`, then click **Continue**
+1. Under **Authentication**, choose **No sign-in**
+1. Open **Request headers**, choose `authorization`, and enter `Bearer YOUR_MEWCP_KEY` as the value. Include the word `Bearer` and the space: Claude sends the value exactly as you type it
+1. Mark the header **Required** and click **Add**
+
+</Stepper>
+
+Things to know about this method:
+
+- **Free plans** can add one custom connector.
+- **Team and Enterprise plans:** only an Owner can add a custom connector, and everyone who uses it shares the key the Owner entered, so they all reach the Owner's apps. To give each person their own apps, have each of them use Option A with their own key.
+- **Changing your key:** a connector's headers cannot be edited. Remove the connector and add it again with the new key.
+
+---
+
+## Check it works
+
+Open a new chat, click **+** at the bottom left of the message box, and go to **Connectors**. MewCP should be listed and switched on. Choose **Manage connectors** and select it to see its tools.
+
+You will see four tools, not the tools of every app: `search`, `get_schema`, `list_accounts` and `call_tool`. That is expected. Claude uses them to find and run the right tool for whatever you ask. See [How MewCP works](/mewcp/getting-started#how-mewcp-works).
+
+Then ask for something from an app you have connected:
 
 ```
 What is on my calendar tomorrow?
 ```
 
-Claude will find the calendar tool, run it against your connected account, and answer.
+Claude asks for permission the first time it uses each tool. Choose **Always allow** only for tools you are happy for it to run without asking.
 
-If you have two accounts connected for the same app, say which one you mean and Claude will pick it by alias:
+If you have two accounts connected for the same app, say which one you mean:
 
 ```
 Check my work Gmail for anything from the design team.
@@ -75,9 +125,63 @@ Check my work Gmail for anything from the design team.
 
 ---
 
-## Where to find your values
+## Troubleshooting
 
-| Value           | Where to get it              |
-| --------------- | ---------------------------- |
-| `your_key_here` | Dashboard -> API Keys        |
-| Connected apps  | Dashboard -> Servers         |
+### MewCP does not show up in Connectors
+
+1. Make sure you quit Claude Desktop completely and reopened it, as in [step 3](#option-a-config-file).
+1. Check the config file is valid JSON. A missing comma, or a trailing comma after the last entry, stops Claude from loading any server in the file.
+1. Read the logs. `mcp.log` covers connection failures in general, and `mcp-server-mewcp.log` holds MewCP's own output:
+
+   ```bash
+   # macOS
+   tail -n 20 -f ~/Library/Logs/Claude/mcp*.log
+   ```
+
+   ```powershell
+   # Windows
+   type "%APPDATA%\Claude\logs\mcp*.log"
+   ```
+
+### The log says `spawn npx ENOENT` or Node is too old
+
+Claude Desktop uses the Node.js installed on your system, not one you switch to in a terminal. If you installed Node with a version manager such as `nvm`, Claude may not find it, or may pick an older version.
+
+- Install Node.js 18 or newer from [nodejs.org](https://nodejs.org/), or
+- point `command` at the full path of `npx`. Run `which npx` on macOS (or `where npx` on Windows) and use that path in place of `"npx"`.
+
+### The log shows `401` or `403`
+
+MewCP rejected the key.
+
+- Check `AUTH_HEADER` reads `Bearer ` followed by the whole key, which starts with `mcp_live_`.
+- If you copied an older config that has `"Authorization: Bearer ..."` in `args`, replace it with the version above. On Windows the spaces in it break the header.
+- A `403` that says the billing period is not active means your MewCP plan needs renewing in the dashboard.
+
+### Windows: `ENOENT` with `${APPDATA}` in the path
+
+Add your expanded `APPDATA` folder to `env`, next to `AUTH_HEADER`:
+
+```json
+"env": {
+  "AUTH_HEADER": "Bearer YOUR_MEWCP_KEY",
+  "APPDATA": "C:\\Users\\YOUR_USERNAME\\AppData\\Roaming\\"
+}
+```
+
+If `npx` still fails, npm may not be installed globally. Run `npm install -g npm` and restart Claude Desktop.
+
+### Certificate errors behind a VPN or corporate proxy
+
+Point Node at your company's CA certificate by adding it to `env`:
+
+```json
+"env": {
+  "AUTH_HEADER": "Bearer YOUR_MEWCP_KEY",
+  "NODE_EXTRA_CA_CERTS": "/path/to/your-ca-certificate.pem"
+}
+```
+
+---
+
+_Last checked against Claude Desktop's documentation on 13 October 2026._

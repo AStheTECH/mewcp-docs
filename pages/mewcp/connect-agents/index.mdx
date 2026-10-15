@@ -1,0 +1,59 @@
+---
+title: Connect Your AI Apps to MewCP
+navigation_label: Overview
+description: Connect Claude, Cursor, VS Code, Codex and other AI apps to MewCP with one URL and one key, and reach every app you have connected.
+---
+
+Every AI app connects to MewCP the same way: one URL and one key. Once it is set up, the app can use every app you have connected in MewCP, and connecting another one later needs no change in the AI app.
+
+---
+
+## Pick your app
+
+| App              | What it is                    | Guide                                                    |
+| ---------------- | ----------------------------- | -------------------------------------------------------- |
+| Claude Desktop   | Anthropic's Mac & Windows app | [How to connect](/mewcp/connect-agents/claude-desktop)   |
+| Claude Code      | Anthropic's CLI agent         | [How to connect](/mewcp/connect-agents/claude-code)      |
+| VS Code          | GitHub Copilot                | [How to connect](/mewcp/connect-agents/vscode)           |
+| Cursor           | AI-first editor               | [How to connect](/mewcp/connect-agents/cursor)           |
+| Codex            | OpenAI's CLI agent            | [How to connect](/mewcp/connect-agents/codex)            |
+| OpenCode         | Open-source terminal agent    | [How to connect](/mewcp/connect-agents/opencode)         |
+| OpenClaw         | Self-hosted agent gateway     | [How to connect](/mewcp/connect-agents/openclaw)         |
+| Antigravity      | Google's agentic IDE          | [How to connect](/mewcp/connect-agents/antigravity)      |
+| Hermes           | Nous Research's CLI agent     | [How to connect](/mewcp/connect-agents/hermes)           |
+| DeepSeek Harness | DeepSeek's agent harness      | [How to connect](/mewcp/connect-agents/deepseek-harness) |
+
+Building your own agent in code? See the framework guides under [Frameworks & SDKs](/mewcp/frameworks/google-adk), or connect from [Python](/mewcp/frameworks/python) or [TypeScript](/mewcp/frameworks/typescript) directly.
+
+---
+
+## What you need
+
+- **A MewCP Key.** In the [dashboard](https://mewcp.com/dashboard), go to **API Keys** and copy your key. It starts with `mcp_live_`. See [MewCP Key](/mewcp/authentication/mewcp-key).
+- **At least one app connected.** In the dashboard, go to **Servers**, pick an app and connect your account. You can connect more at any time.
+
+Every guide uses the same two values:
+
+| Value  | What to use                              |
+| ------ | ---------------------------------------- |
+| URL    | `https://gateway.mewcp.com/personal/mcp` |
+| Header | `Authorization: Bearer YOUR_MEWCP_KEY`   |
+
+The URL is your **personal toolset**: the apps you have connected. MewCP signs in with your key for now. If your AI app asks for a sign-in method, choose the option for an API key or custom header, not OAuth.
+
+Any AI app that can reach a remote MCP server over streamable HTTP and send a custom header can connect, even if it is not listed above.
+
+---
+
+## What your agent sees
+
+Your AI app will not list the tools of every app you have connected. It sees four:
+
+| Tool            | What it does                                     |
+| --------------- | ------------------------------------------------ |
+| `search`        | Find tools by keyword across every connected app |
+| `get_schema`    | Get the parameters for the tools it picked       |
+| `list_accounts` | List the accounts connected for one app          |
+| `call_tool`     | Run the tool                                     |
+
+That is expected. The agent uses them to find and run the right tool for whatever you ask, so you keep asking in plain language. Keeping the list to four is what keeps it accurate as you connect more apps. See [How MewCP works](/mewcp/getting-started#how-mewcp-works) for more.

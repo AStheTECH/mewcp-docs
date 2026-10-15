@@ -1,0 +1,163 @@
+---
+title: How to Connect VS Code to MewCP
+navigation_label: VS Code
+description: Add MewCP to VS Code and reach every app you have connected from GitHub Copilot Chat, in every workspace.
+---
+
+Add MewCP to VS Code once, and GitHub Copilot Chat can use every app you have connected in MewCP: Gmail, Calendar, Slack, GitHub and the rest. VS Code connects to MewCP directly over HTTP, so there is nothing to install.
+
+There are two ways to set it up:
+
+| Method                                               | Where the key lives                         | Best for                                      |
+| ---------------------------------------------------- | ------------------------------------------- | --------------------------------------------- |
+| [Copilot config file](#option-a-copilot-config-file) | In the file                                 | Most people. Also works in GitHub Copilot CLI |
+| [Prompt for the key](#option-b-prompt-for-the-key)   | Stored securely by VS Code, not in the file | Keeping the key out of config files           |
+
+---
+
+## Before you start
+
+- **VS Code** with **GitHub Copilot** set up ([Copilot in VS Code](https://code.visualstudio.com/docs/copilot/setup))
+- **A MewCP Key** from **Dashboard → API Keys**, see [MewCP Key](/mewcp/authentication/mewcp-key)
+- **At least one app connected** in the dashboard under **Servers**
+
+---
+
+## Option A: Copilot config file
+
+<Stepper>
+
+1. **Open the file**
+
+   Create or open `~/.copilot/mcp-config.json` in your home folder. If you have set `COPILOT_HOME`, use `mcp-config.json` in that folder instead. On Windows, your home folder is `%USERPROFILE%`.
+
+1. **Add MewCP**
+
+   Paste this into the file and replace `YOUR_MEWCP_KEY` with your key:
+
+   ```json
+   {
+     "mcpServers": {
+       "mewcp": {
+         "type": "http",
+         "url": "https://gateway.mewcp.com/personal/mcp",
+         "headers": {
+           "Authorization": "Bearer YOUR_MEWCP_KEY"
+         }
+       }
+     }
+   }
+   ```
+
+   Already have an `mcpServers` section? Add only the `"mewcp": { ... }` entry inside it.
+
+1. **Start it**
+
+   Open the Chat view and send a message. VS Code starts new servers when you send a chat message. The first time, it asks whether you trust MewCP. Confirm to start it.
+
+</Stepper>
+
+To share MewCP with everyone who works in a repository, put the same JSON in a `.mcp.json` file at the workspace root instead. Leave your key out of a file you commit: use Option B for that workspace, or have each person keep their own key in their user file.
+
+---
+
+## Option B: Prompt for the key
+
+VS Code can ask for your key once and store it securely, so the key never sits in a config file.
+
+<Stepper>
+
+1. **Open your user configuration**
+
+   Open the Command Palette (`Cmd+Shift+P` on macOS, `Ctrl+Shift+P` on Windows and Linux) and run **MCP: Open User Configuration**. This opens `mcp.json` in your VS Code user profile.
+
+1. **Add MewCP**
+
+   Paste this in. Note that this file uses `servers`, not `mcpServers`:
+
+   ```json
+   {
+     "inputs": [
+       {
+         "type": "promptString",
+         "id": "mewcp-key",
+         "description": "MewCP Key",
+         "password": true
+       }
+     ],
+     "servers": {
+       "mewcp": {
+         "type": "http",
+         "url": "https://gateway.mewcp.com/personal/mcp",
+         "headers": {
+           "Authorization": "Bearer ${input:mewcp-key}"
+         }
+       }
+     }
+   }
+   ```
+
+1. **Enter your key**
+
+   Save the file. When MewCP starts for the first time, VS Code asks for the **MewCP Key**. Paste your key, without `Bearer`.
+
+</Stepper>
+
+VS Code does not pass servers that prompt for input to [Agent Host](https://code.visualstudio.com/docs/agents/concepts/agent-host) sessions. If MewCP is missing there, use Option A.
+
+This is the entire configuration either way. One entry reaches every app you have connected, and connecting another app later needs no change here.
+
+---
+
+## Check it works
+
+Run **MCP: List Servers** from the Command Palette. MewCP should be listed as running. In the Chat view, select **Configure Tools** in the chat input to see its tools.
+
+You will see four tools, not the tools of every app: `search`, `get_schema`, `list_accounts` and `call_tool`. That is expected. Copilot uses them to find and run the right tool for whatever you ask. See [How MewCP works](/mewcp/getting-started#how-mewcp-works).
+
+Then ask Copilot in agent mode for something from an app you have connected:
+
+```
+What is on my calendar tomorrow?
+```
+
+VS Code may ask you to confirm each tool call.
+
+---
+
+## Troubleshooting
+
+### Chat shows an error for MewCP
+
+Run **MCP: List Servers**, select `mewcp`, and choose **Show Output**. The output shows why it failed to start or connect. You can also select the error in the Chat view and choose **Show Output**.
+
+### MewCP does not appear at all
+
+Check the top-level key matches the file:
+
+| File                                          | Top-level key |
+| --------------------------------------------- | ------------- |
+| `~/.copilot/mcp-config.json` or `.mcp.json`   | `mcpServers`  |
+| User profile `mcp.json` or `.vscode/mcp.json` | `servers`     |
+
+Older guides put MCP servers in `settings.json` under `"mcp"`. Move the entry into one of the files above.
+
+### The output shows `401` or `403`
+
+MewCP rejected the key.
+
+- Check the header reads `Bearer ` followed by the whole key, which starts with `mcp_live_`.
+- With Option B, enter the key alone when VS Code asks. The config already adds `Bearer `.
+- A `403` that says the billing period is not active means your MewCP plan needs renewing in the dashboard.
+
+### MewCP was not started because you declined the trust prompt
+
+Run **MCP: Reset Trust** from the Command Palette, then send a chat message again and confirm.
+
+### MCP tools are turned off by your organization
+
+On Copilot Business and Enterprise plans, an admin controls whether MCP servers can be used in Copilot. If no MCP server works, ask your admin to allow MCP servers, or to add `https://gateway.mewcp.com` to your organization's allowlist. See GitHub's [MCP allowlist guide](https://docs.github.com/en/copilot/how-tos/administer-copilot/manage-mcp-usage/configure-enterprise-allowlist).
+
+---
+
+_Last checked against VS Code's documentation on 13 October 2026._

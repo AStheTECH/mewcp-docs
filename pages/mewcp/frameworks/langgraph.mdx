@@ -1,0 +1,155 @@
+---
+title: How to Connect LangGraph to MewCP
+navigation_label: LangGraph
+description: Load every app connected in MewCP as LangChain tools and run them in a LangGraph graph, for yourself or for each of your users.
+---
+
+LangGraph runs MCP tools through LangChain's MCP adapter. The adapter turns MewCP's tools into LangChain tools, and a `ToolNode` in your graph runs them. Your graph then reaches every app connected to its toolset.
+
+---
+
+## Before you start
+
+- **Python 3.10 or newer**
+- **A toolset and its key.** See [Choose a toolset](/mewcp/frameworks#choose-a-toolset)
+- **Your environment** set as in [Set your environment](/mewcp/frameworks#set-your-environment):
+
+  ```bash
+  MEWCP_MCP_URL=https://gateway.mewcp.com/personal/mcp
+  MEWCP_API_KEY=YOUR_MEWCP_KEY
+  ```
+
+---
+
+## Install
+
+```bash
+pip install "langchain[mcp]>=1.4.0" langgraph langchain-anthropic
+```
+
+`langchain.mcp` needs `langchain[mcp]` 1.4.0 or newer. The examples use an Anthropic model; any chat model LangChain supports works the same way.
+
+---
+
+## Connect
+
+```python
+import asyncio
+import os
+
+from fastmcp.client import Client
+from langchain.chat_models import init_chat_model
+from langchain.mcp import MCPAdapter
+from langgraph.graph import START, MessagesState, StateGraph
+from langgraph.prebuilt import ToolNode, tools_condition
+
+
+async def build_graph():
+    client = Client(os.environ["MEWCP_MCP_URL"], auth=os.environ["MEWCP_API_KEY"])
+    async with MCPAdapter(client) as adapter:
+        tools = await adapter.list_tools()
+
+    model = init_chat_model("claude-sonnet-5").bind_tools(tools)
+
+    async def agent(state: MessagesState):
+        return {"messages": [await model.ainvoke(state["messages"])]}
+
+    graph = StateGraph(MessagesState)
+    graph.add_node("agent", agent)
+    graph.add_node("tools", ToolNode(tools))
+    graph.add_edge(START, "agent")
+    graph.add_conditional_edges("agent", tools_condition)
+    graph.add_edge("tools", "agent")
+    return graph.compile()
+
+
+async def main():
+    graph = await build_graph()
+    result = await graph.ainvoke(
+        {"messages": [{"role": "user", "content": "What is on my calendar tomorrow?"}]}
+    )
+    print(result["messages"][-1].content)
+
+
+asyncio.run(main())
+```
+
+`auth=` sends the key as `Authorization: Bearer <key>`. The tools stay usable after the `async with` block ends: each call opens its own connection to MewCP.
+
+The loop between `agent` and `tools` lets the model run `search`, `get_schema` and `call_tool` one after another in a single answer.
+
+---
+
+## Serve your users
+
+With a project toolset, send `x-mewcp-enduser-id` on every request, set to the user the graph is acting for. Build the client per user with a transport that carries the header:
+
+```python
+import os
+
+from fastmcp.client import Client
+from fastmcp.client.transports import StreamableHttpTransport
+from langchain.mcp import MCPAdapter
+
+
+async def tools_for(user_id: str):
+    transport = StreamableHttpTransport(
+        url=os.environ["MEWCP_MCP_URL"],
+        headers={
+            "Authorization": f"Bearer {os.environ['MEWCP_API_KEY']}",
+            "x-mewcp-enduser-id": user_id,
+        },
+    )
+    async with MCPAdapter(Client(transport)) as adapter:
+        return await adapter.list_tools()
+```
+
+Build the graph from `tools_for(user_id)` for each user, as in [Connect](#connect). On a LangGraph server, do it in your graph factory, where the run's authenticated user is available as `runtime.user.identity`.
+
+Use the same ID you pass as `externalUserId` when the user connects their accounts through the [MewCP Auth API](/mewcp-auth). If they have not connected the app a tool needs, the tool result carries a link for them to connect it, and the model can pass it on.
+
+---
+
+## Check it works
+
+```python
+for tool in tools:
+    print(tool.name)
+```
+
+You should see four tools: `search`, `get_schema`, `list_accounts` and `call_tool`. That is expected. See [What your agent sees](/mewcp/frameworks#what-your-agent-sees).
+
+---
+
+## In production
+
+- **Build per run on a LangGraph server.** Build the graph inside your [graph factory](https://docs.langchain.com/oss/python/langchain/mcp/connections#scale-a-deployment), so each run gets its own client and, with a project toolset, its own user.
+- **Pass the tool list once.** Give the same `tools` list to both `bind_tools` and `ToolNode`, so the model can only call tools the node can run.
+
+---
+
+## Troubleshooting
+
+### `ModuleNotFoundError: No module named 'langchain.mcp'`
+
+Install the MCP extra at 1.4.0 or newer: `pip install "langchain[mcp]>=1.4.0"`. Older guides use the separate `langchain-mcp-adapters` package and `MultiServerMCPClient`. See LangChain's [migration guide](https://docs.langchain.com/oss/python/migrate/langchain-mcp-adapters).
+
+### A `LangChainBetaWarning` is printed on import
+
+`langchain.mcp` is in beta and warns once per process. The API may change between LangChain releases, so pin the version you test with.
+
+### Listing tools fails with `401` or `403`
+
+MewCP rejected the key.
+
+- Check `MEWCP_API_KEY` is set where the code runs and holds the whole key.
+- Check the key matches the toolset in `MEWCP_MCP_URL`: your MewCP Key for the personal toolset, the project's key for a project toolset.
+- A `403` that says the billing period is not active means your MewCP plan needs renewing in the dashboard.
+
+### A long task stops with `GraphRecursionError`
+
+The graph hit its step limit before the model finished. Raise it for that run: `await graph.ainvoke(inputs, {"recursion_limit": 50})`.
+
+---
+
+_Last checked against LangChain's and LangGraph's documentation on 13 October 2026._

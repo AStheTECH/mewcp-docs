@@ -18,13 +18,13 @@ import asyncio
 from google.adk.tools.mcp_tool import MCPToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
 
-MEWCP_KEY = "YOUR_MEWCP_KEY"
+MEWCP_API_KEY = "YOUR_MEWCP_KEY"
 
 async def main():
     toolset = MCPToolset(
         connection_params=StreamableHTTPConnectionParams(
             url="https://gateway.mewcp.com/personal/mcp",
-            headers={"Authorization": f"Bearer {MEWCP_KEY}"},
+            headers={"Authorization": f"Bearer {MEWCP_API_KEY}"},
         )
     )
 
@@ -77,7 +77,7 @@ from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnecti
 toolset = MCPToolset(
     connection_params=StreamableHTTPConnectionParams(
         url="https://gateway.mewcp.com/personal/mcp",
-        headers={"Authorization": f"Bearer {MEWCP_KEY}"},
+        headers={"Authorization": f"Bearer {MEWCP_API_KEY}"},
     )
 )
 
@@ -101,7 +101,7 @@ MCPToolset(
         url="https://gateway.mewcp.com/personal/mcp",
     ),
     header_provider=lambda ctx: {
-        "Authorization": f"Bearer {MEWCP_KEY}",
+        "Authorization": f"Bearer {MEWCP_API_KEY}",
         "x-mewcp-enduser-id": ctx.session.state["user_id"],
     },
 )

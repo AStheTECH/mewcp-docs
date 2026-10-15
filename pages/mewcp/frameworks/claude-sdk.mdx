@@ -26,7 +26,7 @@ That suits MewCP well. Claude sees four tools, `search`, `get_schema`, `list_acc
 ```python
 import anthropic
 
-MEWCP_KEY = "YOUR_MEWCP_KEY"
+MEWCP_API_KEY = "YOUR_MEWCP_KEY"
 
 client = anthropic.Anthropic()
 
@@ -44,7 +44,7 @@ response = client.beta.messages.create(
             "type": "url",
             "url": "https://gateway.mewcp.com/personal/mcp",
             "name": "mewcp",
-            "authorization_token": MEWCP_KEY,
+            "authorization_token": MEWCP_API_KEY,
         }
     ],
     betas=["mcp-client-2025-11-20"],

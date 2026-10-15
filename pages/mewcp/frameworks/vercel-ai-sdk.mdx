@@ -1,0 +1,151 @@
+---
+title: How to Connect the Vercel AI SDK to MewCP
+navigation_label: Vercel AI SDK
+description: Give an AI SDK agent every app connected in MewCP with the AI SDK's MCP client, and serve each of your users their own connected accounts.
+---
+
+The AI SDK's MCP client turns MewCP's tools into AI SDK tools you pass to `generateText` or `streamText`. Your agent then reaches every app connected to its toolset through one HTTP connection.
+
+---
+
+## Before you start
+
+- **Node.js 18 or newer** and a TypeScript project
+- **A toolset and its key.** See [Choose a toolset](/mewcp/frameworks#choose-a-toolset)
+- **Your environment** set as in [Set your environment](/mewcp/frameworks#set-your-environment):
+
+  ```bash
+  MEWCP_MCP_URL=https://gateway.mewcp.com/personal/mcp
+  MEWCP_API_KEY=YOUR_MEWCP_KEY
+  ```
+
+---
+
+## Install
+
+```bash
+npm install ai @ai-sdk/mcp
+```
+
+The examples use an [AI Gateway](https://ai-sdk.dev/providers/ai-sdk-providers/ai-gateway) model string. Any model provider the AI SDK supports works the same way.
+
+---
+
+## Connect
+
+```ts
+import { createMCPClient } from "@ai-sdk/mcp";
+import { generateText, isStepCount } from "ai";
+
+const mcp = await createMCPClient({
+  transport: {
+    type: "http",
+    url: process.env.MEWCP_MCP_URL!,
+    headers: { Authorization: `Bearer ${process.env.MEWCP_API_KEY}` },
+  },
+});
+
+try {
+  const tools = await mcp.tools();
+
+  const { text } = await generateText({
+    model: "anthropic/claude-sonnet-5.5",
+    tools,
+    // MewCP takes several tool calls per answer: search, get_schema, call_tool.
+    stopWhen: isStepCount(10),
+    prompt: "What is on my calendar tomorrow?",
+  });
+
+  console.log(text);
+} finally {
+  await mcp.close();
+}
+```
+
+Keep `stopWhen`. Without it, `generateText` and `streamText` stop after one step, so the agent finds a tool with `search` and never runs it.
+
+---
+
+## Serve your users
+
+With a project toolset, add `x-mewcp-enduser-id` to the transport headers, set to the user the agent is acting for. Create the client per request, so each user's calls carry their own ID:
+
+```ts
+import { createMCPClient } from "@ai-sdk/mcp";
+import { generateText, isStepCount } from "ai";
+
+export async function answerFor(userId: string, prompt: string) {
+  const mcp = await createMCPClient({
+    transport: {
+      type: "http",
+      url: process.env.MEWCP_MCP_URL!,
+      headers: {
+        Authorization: `Bearer ${process.env.MEWCP_API_KEY}`,
+        "x-mewcp-enduser-id": userId,
+      },
+    },
+  });
+
+  try {
+    const { text } = await generateText({
+      model: "anthropic/claude-sonnet-5.5",
+      tools: await mcp.tools(),
+      stopWhen: isStepCount(10),
+      prompt,
+    });
+    return text;
+  } finally {
+    await mcp.close();
+  }
+}
+```
+
+Use the same ID you pass as `externalUserId` when the user connects their accounts through the [MewCP Auth API](/mewcp-auth). If they have not connected the app a tool needs, the tool result carries a link for them to connect it, and the model can pass it on.
+
+Run this on your server, for example in a route handler. The key must never reach the browser.
+
+---
+
+## Check it works
+
+List the tools before handing them to the model:
+
+```ts
+const tools = await mcp.tools();
+console.log(Object.keys(tools));
+// [ 'search', 'get_schema', 'list_accounts', 'call_tool' ]
+```
+
+Four tools, not the tools of every app, is expected. See [What your agent sees](/mewcp/frameworks#what-your-agent-sees).
+
+---
+
+## In production
+
+- **Close the client.** Close it when the response is done: in `finally` for `generateText`, or in the `onEnd` callback for `streamText`.
+- **Leave `maxRetries` off.** The client can retry failed tool calls, but `call_tool` runs actions such as sending an email, and a retry can repeat them.
+- **Approve risky calls.** Pass a [`toolApproval`](https://ai-sdk.dev/docs/agents/tool-approvals) policy to `generateText` or `streamText` if a person should confirm before the agent acts.
+
+---
+
+## Troubleshooting
+
+### The agent searches for a tool and then stops
+
+`stopWhen` is missing or too low. Set `stopWhen: isStepCount(10)` so the model can run `search`, `get_schema` and `call_tool` in one answer.
+
+### `createMCPClient` throws an `MCPClientError` with status `401` or `403`
+
+MewCP rejected the key.
+
+- Check `MEWCP_API_KEY` is set where the code runs, and the header reads `Bearer ` followed by the whole key.
+- Check the key matches the toolset in `MEWCP_MCP_URL`: your MewCP Key for the personal toolset, the project's key for a project toolset.
+- A `403` that says the billing period is not active means your MewCP plan needs renewing in the dashboard.
+
+### Calls run against the wrong user's accounts
+
+Each client sends the `x-mewcp-enduser-id` it was created with. Do not share one client across users: create it inside the request, as in [Serve your users](#serve-your-users).
+
+---
+
+_Last checked against the AI SDK's documentation on 13 October 2026._

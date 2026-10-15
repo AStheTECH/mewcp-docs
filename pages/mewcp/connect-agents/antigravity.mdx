@@ -1,0 +1,108 @@
+---
+title: How to Connect Antigravity to MewCP
+navigation_label: Antigravity
+description: Add MewCP to Google Antigravity's mcp_config.json and reach every app you have connected, in Antigravity 2.0, the Antigravity IDE and the Antigravity CLI.
+---
+
+Add MewCP to Antigravity once, and Antigravity's agent can use every app you have connected in MewCP: Gmail, Calendar, Slack, GitHub and the rest. Antigravity connects to MewCP directly over HTTP, so there is nothing to install.
+
+Antigravity 2.0, the Antigravity IDE and the Antigravity CLI all read the same `mcp_config.json`, so one setup covers all three.
+
+---
+
+## Before you start
+
+- **Antigravity** installed ([download](https://antigravity.google/))
+- **A MewCP Key** from **Dashboard → API Keys**, see [MewCP Key](/mewcp/authentication/mewcp-key)
+- **At least one app connected** in the dashboard under **Servers**
+
+---
+
+## Set up MewCP
+
+<Stepper>
+
+1. **Open `mcp_config.json`**
+
+   | Where you use Antigravity | How to open the file                                                                                          |
+   | ------------------------- | ------------------------------------------------------------------------------------------------------------- |
+   | IDE                       | Click **…** at the top of the agent side panel, select **MCP Servers → Manage MCP Servers → View raw config** |
+   | CLI or Antigravity 2.0    | Open `~/.gemini/config/mcp_config.json` in a text editor                                                      |
+
+   That file applies to every project. To add MewCP to one project only, use `.agents/mcp_config.json` inside it instead. Create the file if it does not exist.
+
+1. **Add MewCP**
+
+   Paste this into the file and replace `YOUR_MEWCP_KEY` with your key:
+
+   ```json
+   {
+     "mcpServers": {
+       "mewcp": {
+         "serverUrl": "https://gateway.mewcp.com/personal/mcp",
+         "headers": {
+           "Authorization": "Bearer YOUR_MEWCP_KEY"
+         }
+       }
+     }
+   }
+   ```
+
+   Already have an `mcpServers` section? Add only the `"mewcp": { ... }` entry inside it.
+
+   Antigravity reads the address from `serverUrl`. Guides for other apps use `url`, which Antigravity does not read.
+
+1. **Load it**
+
+   Save the file. In Antigravity 2.0, open **Settings → Customizations** and click the refresh button under **Installed MCP Servers**. In the CLI, type `/mcp` and reload the server configuration.
+
+</Stepper>
+
+This is the entire configuration. One entry reaches every app you have connected, and connecting another app later needs no change here.
+
+Antigravity stores the key as plain text in this file. Keep `mcp_config.json` out of version control, especially a project's `.agents/mcp_config.json`.
+
+---
+
+## Check it works
+
+- **Antigravity 2.0:** MewCP appears under **Settings → Customizations → Installed MCP Servers**, switched on.
+- **IDE:** MewCP appears under **… → MCP Servers**.
+- **CLI:** type `/mcp` and check MewCP shows as active.
+
+You will see four tools, not the tools of every app: `search`, `get_schema`, `list_accounts` and `call_tool`. That is expected. The agent uses them to find and run the right tool for whatever you ask. See [How MewCP works](/mewcp/getting-started#how-mewcp-works).
+
+Then ask the agent for something from an app you have connected:
+
+```
+What is on my calendar tomorrow?
+```
+
+Antigravity asks for your approval before each MCP tool call by default. To let MewCP's tools run without asking, allow `mcp(mewcp/*)` in your [permissions policy](https://antigravity.google/docs/permissions).
+
+---
+
+## Troubleshooting
+
+### MewCP is not listed
+
+- Check the entry uses `serverUrl`, not `url` or `httpUrl`.
+- Check the file is valid JSON. A missing comma, or a trailing comma after the last entry, stops it from loading.
+- Older Antigravity versions kept the file at `~/.gemini/antigravity/mcp_config.json`. In the IDE, **View raw config** always opens the file your version reads, so edit that one.
+
+### MewCP shows as disconnected
+
+Usually MewCP rejected the key. MewCP does not use OAuth, so an **Authenticate** button next to it will not help: fix the key instead.
+
+- Check the header reads `Bearer ` followed by the whole key, which starts with `mcp_live_`.
+- A `403` that says the billing period is not active means your MewCP plan needs renewing in the dashboard.
+
+In the CLI, `/mcp` shows each server's connection log, which includes the error MewCP returned.
+
+### MewCP is listed but its tools never run
+
+Check MewCP is switched on under **Installed MCP Servers**, and that `"disabled": true` or a `disabledTools` list is not set on the `mewcp` entry.
+
+---
+
+_Last checked against Antigravity's documentation on 13 October 2026._

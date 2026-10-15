@@ -1,0 +1,106 @@
+---
+title: How to Connect Hermes Agent to MewCP
+navigation_label: Hermes
+description: Add MewCP to Hermes Agent's config.yaml and reach every app you have connected from Nous Research's Hermes Agent.
+---
+
+Add MewCP to Hermes Agent once, and Hermes can use every app you have connected in MewCP: Gmail, Calendar, Slack, GitHub and the rest. Hermes connects to MewCP directly over Streamable HTTP, so there is nothing to install.
+
+---
+
+## Before you start
+
+- **Hermes Agent** installed with MCP support. The standard install script includes it ([Hermes docs](https://hermes-agent.nousresearch.com/docs/))
+- **A MewCP Key** from **Dashboard → API Keys**, see [MewCP Key](/mewcp/authentication/mewcp-key)
+- **At least one app connected** in the dashboard under **Servers**
+
+---
+
+## Set up MewCP
+
+<Stepper>
+
+1. **Store your key**
+
+   Add your key to `~/.hermes/.env`:
+
+   ```bash
+   MEWCP_API_KEY=YOUR_MEWCP_KEY
+   ```
+
+   If you use a named Hermes profile, put it in that profile's `.env` instead, under `~/.hermes/profiles/<name>/`.
+
+1. **Add MewCP**
+
+   Open `~/.hermes/config.yaml` and add MewCP under the top-level `mcp_servers:` key:
+
+   ```yaml
+   mcp_servers:
+     mewcp:
+       url: "https://gateway.mewcp.com/personal/mcp"
+       headers:
+         Authorization: "Bearer ${MEWCP_API_KEY}"
+   ```
+
+   Already have an `mcp_servers:` section? Add only the `mewcp:` entry under it, at the same indentation as your other servers.
+
+   Leave out `auth: oauth`. MewCP signs in with your key, not OAuth.
+
+1. **Load it**
+
+   In a running Hermes session, type `/reload-mcp`. Or start a new session.
+
+</Stepper>
+
+This is the entire configuration. One entry reaches every app you have connected, and connecting another app later needs no change here.
+
+---
+
+## Check it works
+
+From a shell, run:
+
+```bash
+hermes mcp test mewcp
+```
+
+It connects, lists the tools it found, and exits with `0` on success, `1` if the connection failed, or `3` if `mewcp` is not in your config.
+
+You will see four tools, not the tools of every app. Hermes names them `mcp__mewcp__search`, `mcp__mewcp__get_schema`, `mcp__mewcp__list_accounts` and `mcp__mewcp__call_tool`. That is expected. Hermes uses them to find and run the right tool for whatever you ask. See [How MewCP works](/mewcp/getting-started#how-mewcp-works).
+
+Then ask Hermes for something from an app you have connected:
+
+```
+What is on my calendar tomorrow?
+```
+
+---
+
+## Troubleshooting
+
+### `${MEWCP_API_KEY} in url/headers is not set`
+
+Hermes refuses to connect when a variable in the URL or headers has no value, rather than sending the literal text. Check `MEWCP_API_KEY` is in the `.env` of the profile you are running, then run `/reload-mcp`.
+
+### `hermes mcp test` exits with `1`
+
+The connection failed. Usually MewCP rejected the key.
+
+- Check the header reads `Bearer ${MEWCP_API_KEY}`, with the space after `Bearer`, and that `MEWCP_API_KEY` holds the whole key, which starts with `mcp_live_`.
+- A `403` that says the billing period is not active means your MewCP plan needs renewing in the dashboard.
+
+### `hermes mcp test` exits with `3`
+
+Hermes found no server named `mewcp`. Check the entry sits under the top-level `mcp_servers:` key in `~/.hermes/config.yaml`, with YAML indentation of spaces, not tabs.
+
+### Changes to `config.yaml` do nothing
+
+Hermes reads MCP servers when a session starts. Run `/reload-mcp` after every change, including changes to the key in `.env`.
+
+### A call returns `outcome_uncertain` after Hermes sat idle
+
+If the connection to MewCP expired while Hermes was idle, Hermes does not retry a tool call that might change something, since it cannot tell whether the first attempt ran. Check whether the action happened before asking again. Read-only calls are retried for you.
+
+---
+
+_Last checked against Hermes Agent's documentation on 13 October 2026._

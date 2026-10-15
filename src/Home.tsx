@@ -27,7 +27,7 @@ const quickLinks = [
     title: "Connect an agent",
     description:
       "Google ADK, CrewAI, LangChain, OpenAI Agents, or the Claude SDK.",
-    to: "/mewcp/connect-agents/google-adk",
+    to: "/mewcp/frameworks/google-adk",
   },
   {
     icon: KeyRoundIcon,
@@ -71,23 +71,24 @@ const features = [
 ];
 
 const clients = [
-  { label: "Claude Desktop", to: "/mewcp/connect/claude-desktop" },
-  { label: "VS Code & Cursor", to: "/mewcp/connect/vscode-cursor" },
-  { label: "Codex", to: "/mewcp/connect/codex" },
-  { label: "TypeScript", to: "/mewcp/connect/typescript" },
-  { label: "Python", to: "/mewcp/connect/python" },
+  { label: "Claude Desktop", to: "/mewcp/connect-agents/claude-desktop" },
+  { label: "VS Code", to: "/mewcp/connect-agents/vscode" },
+  { label: "Cursor", to: "/mewcp/connect-agents/cursor" },
+  { label: "Codex", to: "/mewcp/connect-agents/codex" },
+  { label: "TypeScript", to: "/mewcp/frameworks/typescript" },
+  { label: "Python", to: "/mewcp/frameworks/python" },
 ];
 
 const agentFrameworks = [
-  { label: "Google ADK", to: "/mewcp/connect-agents/google-adk" },
-  { label: "CrewAI", to: "/mewcp/connect-agents/crewai" },
-  { label: "LangChain (Python)", to: "/mewcp/connect-agents/langchain-python" },
+  { label: "Google ADK", to: "/mewcp/frameworks/google-adk" },
+  { label: "CrewAI", to: "/mewcp/frameworks/crewai" },
+  { label: "LangChain (Python)", to: "/mewcp/frameworks/langchain-python" },
   {
     label: "LangChain (TypeScript)",
-    to: "/mewcp/connect-agents/langchain-typescript",
+    to: "/mewcp/frameworks/langchain-typescript",
   },
-  { label: "OpenAI Agents", to: "/mewcp/connect-agents/openai-agents" },
-  { label: "Claude SDK", to: "/mewcp/connect-agents/claude-sdk" },
+  { label: "OpenAI Agents", to: "/mewcp/frameworks/openai-agents" },
+  { label: "Claude SDK", to: "/mewcp/frameworks/claude-sdk" },
 ];
 
 // The head and tail never change. Only the three lines between them do, which is
@@ -96,7 +97,7 @@ const CODE_HEAD = `from fastmcp import Client
 
 client = Client(
     "https://gateway.mewcp.com/personal/mcp",
-    headers={"Authorization": f"Bearer {MEWCP_KEY}"},
+    headers={"Authorization": f"Bearer {MEWCP_API_KEY}"},
 )
 
 async with client:

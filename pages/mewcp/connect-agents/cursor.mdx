@@ -1,0 +1,122 @@
+---
+title: How to Connect Cursor to MewCP
+navigation_label: Cursor
+description: Add MewCP to Cursor's mcp.json and reach every app you have connected from Cursor's Agent, in the editor and the Cursor CLI.
+---
+
+Add MewCP to Cursor once, and Cursor's Agent can use every app you have connected in MewCP: Gmail, Calendar, Slack, GitHub and the rest. Cursor connects to MewCP directly over HTTP, so there is nothing to install. The same setup works in the Cursor CLI.
+
+---
+
+## Before you start
+
+- **Cursor** installed and updated ([download](https://cursor.com/downloads))
+- **A MewCP Key** from **Dashboard → API Keys**, see [MewCP Key](/mewcp/authentication/mewcp-key)
+- **At least one app connected** in the dashboard under **Servers**
+
+---
+
+## Set up MewCP
+
+<Stepper>
+
+1. **Open `mcp.json`**
+
+   Cursor reads MCP servers from two files. Pick one:
+
+   | File                                     | MewCP loads in                                        |
+   | ---------------------------------------- | ----------------------------------------------------- |
+   | `~/.cursor/mcp.json` in your home folder | Every project                                         |
+   | `.cursor/mcp.json` in a project          | That project only, for everyone who opens it from git |
+
+   Create the file if it does not exist. On Windows, your home folder is `%USERPROFILE%`.
+
+1. **Add MewCP**
+
+   Paste this into the file and replace `YOUR_MEWCP_KEY` with your key:
+
+   ```json
+   {
+     "mcpServers": {
+       "mewcp": {
+         "url": "https://gateway.mewcp.com/personal/mcp",
+         "headers": {
+           "Authorization": "Bearer YOUR_MEWCP_KEY"
+         }
+       }
+     }
+   }
+   ```
+
+   Already have an `mcpServers` section? Add only the `"mewcp": { ... }` entry inside it.
+
+1. **Restart Cursor**
+
+   Save the file and restart Cursor so it loads the new server.
+
+</Stepper>
+
+This is the entire configuration. One entry reaches every app you have connected, and connecting another app later needs no change here.
+
+### Keep the key out of a shared file
+
+For a project's `.cursor/mcp.json` that goes into git, read the key from each person's environment instead:
+
+```json
+"headers": {
+  "Authorization": "Bearer ${env:MEWCP_API_KEY}"
+}
+```
+
+Each person sets `MEWCP_API_KEY` in their shell profile, such as `~/.zshrc`, then restarts Cursor. Each of them reaches their own apps with their own key.
+
+Cursor writes environment variables as `${env:NAME}`. A plain `${MEWCP_API_KEY}`, as used in Claude Code, is not read by Cursor.
+
+---
+
+## Check it works
+
+Open **Customize** in Cursor's sidebar and go to **MCPs**. MewCP should be listed and switched on.
+
+You will see four tools, not the tools of every app: `search`, `get_schema`, `list_accounts` and `call_tool`. That is expected. The Agent uses them to find and run the right tool for whatever you ask. See [How MewCP works](/mewcp/getting-started#how-mewcp-works).
+
+Then ask the Agent for something from an app you have connected:
+
+```
+What is on my calendar tomorrow?
+```
+
+Cursor asks for approval before each MCP tool call by default. Click the arrow next to the tool name to see what it is about to send.
+
+In the Cursor CLI, run `agent mcp list` to see MewCP's status and `agent mcp list-tools mewcp` to see its tools.
+
+---
+
+## Troubleshooting
+
+### MewCP is not listed, or shows an error
+
+Open the Output panel with `Cmd+Shift+U` on macOS or `Ctrl+Shift+U` on Windows and Linux, and choose **MCP Logs** from the dropdown. It shows connection and authentication errors for each server.
+
+- Check `mcp.json` is valid JSON. A missing comma, or a trailing comma after the last entry, stops the file from loading.
+- Check the file is in the right place: `~/.cursor/mcp.json`, or `.cursor/mcp.json` inside the project folder, not the project root.
+
+### The log shows `401` or `403`
+
+MewCP rejected the key.
+
+- Check the header reads `Bearer ` followed by the whole key, which starts with `mcp_live_`.
+- If you use `${env:MEWCP_API_KEY}`, Cursor must be able to see the variable. Cursor started from the Dock or Start menu may not have it. Set it in your shell profile and restart Cursor completely.
+- A `403` that says the billing period is not active means your MewCP plan needs renewing in the dashboard.
+
+### Changes to `mcp.json` do nothing
+
+Restart Cursor. If MewCP is defined in both the project's `.cursor/mcp.json` and your global `~/.cursor/mcp.json`, the project's entry wins, so edit that one.
+
+### MewCP is blocked on a Cursor Enterprise team
+
+Enterprise admins can limit which MCP servers members may run with an MCP allowlist. Ask your admin to add a URL entry for `https://gateway.mewcp.com` under **Team Settings → MCP Configuration**.
+
+---
+
+_Last checked against Cursor's documentation on 13 October 2026._
