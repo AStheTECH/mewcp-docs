@@ -45,7 +45,7 @@ By the end of this tutorial you will have Claude Desktop connected to MewCP, wit
    | macOS    | `~/Library/Application Support/Claude/claude_desktop_config.json` |
    | Windows  | `%APPDATA%\Claude\claude_desktop_config.json`                     |
 
-   Paste this into it, replacing `YOUR_MEWCP_KEY` with the key you just copied:
+   Paste this into it, replacing `API_KEY` with the key you just copied:
 
    ```json
    {
@@ -60,7 +60,7 @@ By the end of this tutorial you will have Claude Desktop connected to MewCP, wit
            "Authorization:${AUTH_HEADER}"
          ],
          "env": {
-           "AUTH_HEADER": "Bearer YOUR_MEWCP_KEY"
+           "AUTH_HEADER": "Bearer API_KEY"
          }
        }
      }

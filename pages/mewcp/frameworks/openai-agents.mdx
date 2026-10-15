@@ -17,7 +17,7 @@ pip install openai-agents
 import asyncio
 from agents.mcp import MCPServerStreamableHttp
 
-MEWCP_API_KEY = "YOUR_MEWCP_KEY"
+MEWCP_API_KEY = "API_KEY"
 
 async def main():
     async with MCPServerStreamableHttp(
@@ -95,7 +95,7 @@ The agent will call `search` to find the calendar tool, `get_schema` for its par
 
 ## Where to find your values
 
-| Value            | Where to get it       |
-| ---------------- | --------------------- |
-| `YOUR_MEWCP_KEY` | Dashboard -> API Keys |
-| Connected apps   | Dashboard -> Servers  |
+| Value          | Where to get it       |
+| -------------- | --------------------- |
+| `API_KEY`      | Dashboard -> API Keys |
+| Connected apps | Dashboard -> Servers  |

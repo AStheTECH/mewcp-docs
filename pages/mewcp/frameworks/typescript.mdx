@@ -18,7 +18,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
 const GATEWAY_URL = "https://gateway.mewcp.com/personal/mcp";
-const MEWCP_API_KEY = "YOUR_MEWCP_KEY";
+const MEWCP_API_KEY = "API_KEY";
 
 const transport = new StreamableHTTPClientTransport(new URL(GATEWAY_URL), {
   requestInit: {
@@ -135,7 +135,7 @@ const transport = new StreamableHTTPClientTransport(new URL(GATEWAY_URL), {
 
 ## Where to find your values
 
-| Value            | Where to get it       |
-| ---------------- | --------------------- |
-| `YOUR_MEWCP_KEY` | Dashboard -> API Keys |
-| Connected apps   | Dashboard -> Servers  |
+| Value          | Where to get it       |
+| -------------- | --------------------- |
+| `API_KEY`      | Dashboard -> API Keys |
+| Connected apps | Dashboard -> Servers  |

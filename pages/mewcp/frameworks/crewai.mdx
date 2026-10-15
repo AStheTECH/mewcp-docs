@@ -18,7 +18,7 @@ pip install crewai "crewai-tools[mcp]"
 ```python
 from crewai_tools import MCPServerAdapter
 
-MEWCP_API_KEY = "YOUR_MEWCP_KEY"
+MEWCP_API_KEY = "API_KEY"
 
 server_params = {
     "url": "https://gateway.mewcp.com/personal/mcp",
@@ -94,7 +94,7 @@ with MCPServerAdapter(server_params) as mcp_tools:
 
 ## Where to find your values
 
-| Value            | Where to get it       |
-| ---------------- | --------------------- |
-| `YOUR_MEWCP_KEY` | Dashboard -> API Keys |
-| Connected apps   | Dashboard -> Servers  |
+| Value          | Where to get it       |
+| -------------- | --------------------- |
+| `API_KEY`      | Dashboard -> API Keys |
+| Connected apps | Dashboard -> Servers  |

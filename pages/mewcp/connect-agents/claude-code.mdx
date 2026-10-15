@@ -25,11 +25,11 @@ There are two ways to set it up:
 
 ## Option A: One command
 
-Run this in your terminal, replacing `YOUR_MEWCP_KEY` with your key:
+Run this in your terminal, replacing `API_KEY` with your key:
 
 ```bash
 claude mcp add --transport http --scope user mewcp https://gateway.mewcp.com/personal/mcp \
-  --header "Authorization: Bearer YOUR_MEWCP_KEY"
+  --header "Authorization: Bearer API_KEY"
 ```
 
 Claude Code prints an `Added ...` line when it has saved the server.
@@ -73,7 +73,7 @@ Use this to share MewCP with everyone who works in a repository. Each person sti
    Add your key to your shell profile (`~/.zshrc` or `~/.bashrc`), then open a new terminal:
 
    ```bash
-   export MEWCP_API_KEY="YOUR_MEWCP_KEY"
+   export MEWCP_API_KEY="API_KEY"
    ```
 
 1. **Approve the server**
@@ -119,7 +119,7 @@ It was added with the default local scope, which belongs to the folder you ran t
 ```bash
 claude mcp remove mewcp --scope local
 claude mcp add --transport http --scope user mewcp https://gateway.mewcp.com/personal/mcp \
-  --header "Authorization: Bearer YOUR_MEWCP_KEY"
+  --header "Authorization: Bearer API_KEY"
 ```
 
 ### `claude mcp list` shows `✘ Failed to connect`

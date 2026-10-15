@@ -33,7 +33,7 @@ Add MewCP to OpenCode once, and OpenCode can use every app you have connected in
 
 1. **Add MewCP**
 
-   Paste this into the file and replace `YOUR_MEWCP_KEY` with your key:
+   Paste this into the file and replace `API_KEY` with your key:
 
    ```json
    {
@@ -45,7 +45,7 @@ Add MewCP to OpenCode once, and OpenCode can use every app you have connected in
          "enabled": true,
          "oauth": false,
          "headers": {
-           "Authorization": "Bearer YOUR_MEWCP_KEY"
+           "Authorization": "Bearer API_KEY"
          }
        }
      }
@@ -76,7 +76,7 @@ OpenCode can read the key from an environment variable or a file instead. Use ei
 "Authorization": "Bearer {file:~/.secrets/mewcp-key}"
 ```
 
-For `{env:MEWCP_API_KEY}`, set `export MEWCP_API_KEY="YOUR_MEWCP_KEY"` in your shell profile. For `{file:...}`, the file holds the key alone. Either way, a project's `opencode.json` can then go into git without your key.
+For `{env:MEWCP_API_KEY}`, set `export MEWCP_API_KEY="API_KEY"` in your shell profile. For `{file:...}`, the file holds the key alone. Either way, a project's `opencode.json` can then go into git without your key.
 
 ---
 
@@ -126,7 +126,7 @@ OpenCode waits 5 seconds for a server's tools. Raise the limit with `timeout`, i
   "oauth": false,
   "timeout": 15000,
   "headers": {
-    "Authorization": "Bearer YOUR_MEWCP_KEY"
+    "Authorization": "Bearer API_KEY"
   }
 }
 ```

@@ -37,7 +37,7 @@ bearer_token_env_var = "MEWCP_API_KEY"
 Then set the variable in your shell profile (`~/.zshrc` or `~/.bashrc`) and open a new terminal:
 
 ```bash
-export MEWCP_API_KEY="YOUR_MEWCP_KEY"
+export MEWCP_API_KEY="API_KEY"
 ```
 
 Codex sends `Authorization: Bearer <your key>` for you, so set the variable to the key alone.
@@ -49,7 +49,7 @@ If you start Codex from somewhere that does not load your shell profile, such as
 ```toml
 [mcp_servers.mewcp]
 url = "https://gateway.mewcp.com/personal/mcp"
-http_headers = { "Authorization" = "Bearer YOUR_MEWCP_KEY" }
+http_headers = { "Authorization" = "Bearer API_KEY" }
 ```
 
 This is the entire configuration either way. One entry reaches every app you have connected, and connecting another app later needs no change here.
