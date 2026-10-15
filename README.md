@@ -1,49 +1,63 @@
 # MewCP Docs
 
-Official documentation site for [MewCP](https://mewcp.com) - a managed MCP (Model Context Protocol) gateway.
+This repo is the source for the [MewCP](https://mewcp.com) documentation site.
 
-Built with [Zudoku](https://zudoku.dev).
+📖 **Read the docs:** [docs.mewcp.com](https://docs.mewcp.com)
 
-## Structure
+MewCP is a managed MCP (Model Context Protocol) gateway that connects any LLM or agent to the tools and services it needs, with auth, credentials, usage controls, and team access handled for you.
+
+## Contributing
+
+Found something wrong, unclear, or missing? Contributions are welcome.
+
+- **Small fixes** (typos, broken links, unclear wording): edit the relevant `.mdx` file directly on GitHub and open a pull request.
+- **Bigger changes** (new guides, restructuring, new integrations): please [open an issue](https://github.com/AStheTECH/mewcp-docs/issues) first to discuss the change before writing it up.
+- **Product bugs or questions** that aren't about the docs themselves: contact us at [contact@mewcp.com](mailto:contact@mewcp.com) instead of opening a docs issue.
+
+## Repo structure
 
 ```
 pages/
-  mewcp/              # Main documentation
-    getting-started   # Tutorial
-    connect/          # Client connection guides
-    connect-agents/   # AI agent framework guides
-    authentication/   # MewCP Key and Account API Keys
+  mewcp/
+    getting-started       # Tutorial: first MCP tool call in ~5 minutes
+    connect/               # Client connection guides (Claude Desktop, VS Code, Cursor, Codex, TS, Python)
+    connect-agents/        # Agent framework guides (Google ADK, CrewAI, LangChain, OpenAI Agents, Claude SDK)
+    authentication/        # MewCP Key and Account API Keys
+    auth-api/               # OAuth integration and static credentials guides
 apis/
-  mewcp-auth.yaml     # OpenAPI spec for the MewCP Auth API
+  mewcp-auth.yaml          # OpenAPI spec powering the MewCP Auth API reference
+zudoku.config.tsx          # Navigation, site metadata, theme, redirects
 ```
 
-## Development
+Guides are plain Markdown/MDX with frontmatter:
+
+```mdx
+---
+title: Page Title
+description: One sentence shown in search results and link previews.
+---
+
+Content goes here.
+```
+
+Adding a new guide means creating the `.mdx` file under `pages/mewcp/` and adding it to the relevant section in `zudoku.config.tsx`'s `navigation` array.
+
+## Running locally
+
+This site is built with [Zudoku](https://zudoku.dev). To preview changes before opening a PR:
 
 ```bash
 npm install
 npm run dev
 ```
 
-## Build
+To build and preview the production output (needed to test search, since [Pagefind](https://pagefind.app) indexes at build time):
 
 ```bash
 npm run build
+npm run preview
 ```
 
-Search (pagefind) is indexed at build time. To preview with search working:
+## License
 
-```bash
-npm run build && npm run preview
-```
-
-## Adding content
-
-- **Guides**: Add `.mdx` files under `pages/mewcp/`
-- **API reference**: Edit `apis/mewcp-auth.yaml`
-- **Navigation**: Update `zudoku.config.tsx`
-
-## Tech
-
-- [Zudoku](https://zudoku.dev) - docs framework
-- [Pagefind](https://pagefind.app) - static search
-- [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0) - API reference spec
+See [LICENSE.md](LICENSE.md).

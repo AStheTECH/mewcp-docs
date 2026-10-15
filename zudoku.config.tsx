@@ -52,7 +52,7 @@ const config: ZudokuConfig = {
             {
               label:
                 "✉ Contact us - our dev team will reach out as soon as possible",
-              href: "mailto:contact@asthetech.com",
+              href: "mailto:contact@mewcp.com",
             },
           ],
         },
@@ -184,7 +184,7 @@ const config: ZudokuConfig = {
       {
         label: "Contact Us",
         icon: "mail",
-        to: "mailto:contact@asthetech.com",
+        to: "mailto:contact@mewcp.com",
         target: "_self",
       },
     ],
