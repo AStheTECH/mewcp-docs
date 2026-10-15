@@ -22,7 +22,7 @@ MCP servers for providers like **Google, Slack, GitHub, Notion**, and others use
 
 2. **Register your OAuth app and assign it to a business-mode server key**: go to **Dashboard (mode=business) → Servers → select server → Register OAuth Client**, add your `client_id` and `client_secret` from the provider (e.g. Google Cloud Console, Slack API, GitHub OAuth Apps), and set the redirect URI to `https://gateway.mewcp.com/oauth/callback`.
 
-3. **Get the server's MewCP Key**: go to **Dashboard (mode=business) → Servers → select server → select key → Copy Key**. You'll send this on every `POST /oauth/{provider}/start` call, alongside your Account API Key, see below.
+3. **Get the server's API Key**: go to **Dashboard (mode=business) → Servers → select server → select key → Copy Key**. You'll send this on every `POST /oauth/{provider}/start` call, alongside your Account API Key, see below.
 
 ---
 
@@ -32,7 +32,7 @@ MCP servers for providers like **Google, Slack, GitHub, Notion**, and others use
 
 1. **Start the OAuth flow**
 
-   Call `POST /oauth/{provider}/start` from your backend. Two headers are required: your Account API Key (`Authorization`) and the MewCP Key of the specific server you're connecting this user to (`x-mewcp-key`). The OAuth app used is always the one assigned to that server key, so there's no app selection in the request body. Pass the user's ID and, if you have a frontend, a callback URL. You can also pass optional user metadata, which MewCP stores alongside the credential for display in your dashboard:
+   Call `POST /oauth/{provider}/start` from your backend. Two headers are required: your Account API Key (`Authorization`) and the API Key of the specific server you're connecting this user to (`x-mewcp-key`). The OAuth app used is always the one assigned to that server key, so there's no app selection in the request body. Pass the user's ID and, if you have a frontend, a callback URL. You can also pass optional user metadata, which MewCP stores alongside the credential for display in your dashboard:
 
    ```http
    POST /oauth/google/start
@@ -51,7 +51,7 @@ MCP servers for providers like **Google, Slack, GitHub, Notion**, and others use
    ```
 
    | Field                       | Required | Description                                          |
-   | --------------------------- | -------- | ----------------------------------------------------- |
+   | --------------------------- | -------- | ---------------------------------------------------- |
    | `externalUserId`            | Yes      | Your internal user identifier                        |
    | `frontendCallbackUrl`       | No       | Where MewCP redirects the user after OAuth completes |
    | `externalUserMeta.name`     | No       | User's display name, stored for your reference       |
@@ -97,7 +97,7 @@ MCP servers for providers like **Google, Slack, GitHub, Notion**, and others use
    After the user logs in, MewCP redirects the popup to your `frontendCallbackUrl`:
 
    | Result  | Query params on your callback URL |
-   | ------- | ---------------------------------- |
+   | ------- | --------------------------------- |
    | Success | `?provider=google&success=true`   |
    | Error   | `?oauth_error=<message>`          |
 

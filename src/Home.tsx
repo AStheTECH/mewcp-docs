@@ -32,7 +32,7 @@ const quickLinks = [
   {
     icon: KeyRoundIcon,
     title: "Authentication",
-    description: "MewCP keys, account API keys, OAuth, and static credentials.",
+    description: "API Keys, account API keys, OAuth, and static credentials.",
     to: "/mewcp/authentication/mewcp-key",
   },
   {

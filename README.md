@@ -22,7 +22,7 @@ pages/
     getting-started       # Tutorial: first MCP tool call in ~5 minutes
     connect/               # Client connection guides (Claude Desktop, VS Code, Cursor, Codex, TS, Python)
     connect-agents/        # Agent framework guides (Google ADK, CrewAI, LangChain, OpenAI Agents, Claude SDK)
-    authentication/        # MewCP Key and Account API Keys
+    authentication/        # API Key and Account API Keys
     auth-api/               # OAuth integration and static credentials guides
 apis/
   mewcp-auth.yaml          # OpenAPI spec powering the MewCP Auth API reference

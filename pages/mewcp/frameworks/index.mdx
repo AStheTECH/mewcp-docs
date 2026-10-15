@@ -29,12 +29,12 @@ Using a framework that is not listed? If it can connect to a remote MCP server o
 
 A toolset is the set of apps your agent can reach. Each one has its own MCP URL, and the key you send decides whose accounts the calls run against.
 
-|                | Personal toolset                                  | Project toolset                                         |
-| -------------- | ------------------------------------------------- | ------------------------------------------------------- |
-| Use it for     | An agent that works with your own accounts        | An agent you ship to your own users                     |
-| URL            | `https://gateway.mewcp.com/personal/mcp`          | `https://gateway.mewcp.com/<toolset-id>/mcp`            |
-| Key            | Your [MewCP Key](/mewcp/authentication/mewcp-key) | The project's key, from the project's **API Keys** page |
-| Whose accounts | Yours                                             | The user named in `x-mewcp-enduser-id`                  |
+|                | Personal toolset                                | Project toolset                                         |
+| -------------- | ----------------------------------------------- | ------------------------------------------------------- |
+| Use it for     | An agent that works with your own accounts      | An agent you ship to your own users                     |
+| URL            | `https://gateway.mewcp.com/personal/mcp`        | `https://gateway.mewcp.com/<toolset-id>/mcp`            |
+| Key            | Your [API Key](/mewcp/authentication/mewcp-key) | The project's key, from the project's **API Keys** page |
+| Whose accounts | Yours                                           | The user named in `x-mewcp-enduser-id`                  |
 
 You find a project toolset's URL on its page in the dashboard, under **Projects → your project → Toolsets**.
 

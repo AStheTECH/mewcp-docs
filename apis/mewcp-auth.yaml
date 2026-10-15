@@ -21,7 +21,7 @@ info:
 
     Generate an Account API Key from your MewCP dashboard under **Developer -> Account API Keys**.
 
-    **Every endpoint also requires an `x-mewcp-key` header** carrying the MewCP Key of the server you're
+    **Every endpoint also requires an `x-mewcp-key` header** carrying the API Key of the server you're
     acting on:
 
     ```
@@ -29,8 +29,8 @@ info:
     x-mewcp-key: mcp_live_YOUR_SERVER_KEY
     ```
 
-    This is the same MewCP Key used to authenticate MCP client connections (see
-    [MewCP Key](/mewcp/authentication/mewcp-key)), and it must be a **business-mode** server key. For
+    This is the same API Key used to authenticate MCP client connections (see
+    [API Key](/mewcp/authentication/mewcp-key)), and it must be a **business-mode** server key. For
     `/oauth/{provider}/start` and `/credentials/static/{providerSlug}/connect` it must also match the
     `provider`/`providerSlug` in the path. Without it, these endpoints return `401`/`400`.
 
@@ -55,12 +55,12 @@ info:
 
     **OAuth flow:**
     1. Register your OAuth app in the MewCP dashboard under **Credentials → OAuth Apps**
-    2. Call `POST /oauth/{provider}/start` with `externalUserId` (+ optional `frontendCallbackUrl`), sending both your Account API Key (`Authorization`) and the server's MewCP Key (`x-mewcp-key`)
+    2. Call `POST /oauth/{provider}/start` with `externalUserId` (+ optional `frontendCallbackUrl`), sending both your Account API Key (`Authorization`) and the server's API Key (`x-mewcp-key`)
     3. Open the returned `authUrl` for your user - as a popup or direct browser open
     4. MewCP completes the handshake, encrypts and stores the tokens
 
     **Static credentials flow:**
-    1. Call `POST /credentials/static/{providerSlug}/connect` with `externalUserId` (+ optional `frontendCallbackUrl`), sending both your Account API Key (`Authorization`) and the server's MewCP Key (`x-mewcp-key`)
+    1. Call `POST /credentials/static/{providerSlug}/connect` with `externalUserId` (+ optional `frontendCallbackUrl`), sending both your Account API Key (`Authorization`) and the server's API Key (`x-mewcp-key`)
     2. Send the returned `hostedFormUrl` to your user - it expires in 5 minutes
     3. User fills in their API key on MewCP's hosted page
     4. MewCP encrypts and stores the credentials in vault
@@ -102,7 +102,7 @@ components:
       in: header
       name: x-mewcp-key
       description: |
-        The MewCP Key of the specific server you're connecting the user to. Must be a
+        The API Key of the specific server you're connecting the user to. Must be a
         business-mode server key, and must match the `provider`/`providerSlug` in the path.
         Copy it from **Dashboard (mode=business) -> Servers -> Select server -> Select Key -> Copy Key**.
 
@@ -207,7 +207,7 @@ components:
             $ref: "#/components/schemas/Error"
           example:
             error: invalid_request
-            message: "Missing or invalid x-mewcp-key: send the MewCP Key of a business-mode server you own"
+            message: "Missing or invalid x-mewcp-key: send the API Key of a business-mode server you own"
     Forbidden:
       description: Server not in active subscription
       content:
@@ -256,7 +256,7 @@ paths:
           required: true
           schema:
             type: string
-          description: MewCP Key of the business-mode server to connect this user to. Must match `provider`.
+          description: API Key of the business-mode server to connect this user to. Must match `provider`.
           example: mcp_live_7df44e73e8cd42bbf4860ffc66520ef...
       requestBody:
         required: true
@@ -344,7 +344,7 @@ paths:
                   summary: Missing or invalid x-mewcp-key header
                   value:
                     error: unauthorized
-                    message: "Missing or invalid MewCP key in x-mewcp-key header"
+                    message: "Missing or invalid API Key in x-mewcp-key header"
         "403":
           $ref: "#/components/responses/Forbidden"
 
@@ -381,7 +381,7 @@ paths:
           required: true
           schema:
             type: string
-          description: MewCP Key of the business-mode server to connect this user to. Must match `providerSlug`.
+          description: API Key of the business-mode server to connect this user to. Must match `providerSlug`.
           example: mcp_live_7df44e73e8cd42bbf4860ffc66520ef...
       requestBody:
         required: true
@@ -482,7 +482,7 @@ paths:
       description: |
         Returns the audience that have at least one active credential under the server identified by `x-mewcp-key`, sorted by most recently updated.
 
-        `Authorization` is your Account API Key; `x-mewcp-key` is that server's own MewCP Key. The two are not interchangeable and both are required.
+        `Authorization` is your Account API Key; `x-mewcp-key` is that server's own API Key. The two are not interchangeable and both are required.
       tags: [Audience]
       security:
         - AccountApiKey: []
@@ -493,7 +493,7 @@ paths:
           required: true
           schema:
             type: string
-          description: MewCP Key of the business-mode server to list audience for.
+          description: API Key of the business-mode server to list audience for.
           example: mcp_live_7df44e73e8cd42bbf4860ffc66520ef...
       responses:
         "200":
@@ -531,7 +531,7 @@ paths:
       description: |
         Returns an audience member's metadata and their active credential(s) under the server identified by `x-mewcp-key`.
 
-        `Authorization` is your Account API Key; `x-mewcp-key` is that server's own MewCP Key. The two are not interchangeable and both are required.
+        `Authorization` is your Account API Key; `x-mewcp-key` is that server's own API Key. The two are not interchangeable and both are required.
       tags: [Audience]
       security:
         - AccountApiKey: []
@@ -549,7 +549,7 @@ paths:
           required: true
           schema:
             type: string
-          description: MewCP Key of the business-mode server this end-user is connected under.
+          description: API Key of the business-mode server this end-user is connected under.
           example: mcp_live_7df44e73e8cd42bbf4860ffc66520ef...
       responses:
         "200":
@@ -602,7 +602,7 @@ paths:
         cannot be recovered. The user will need to reconnect (re-authorize or resubmit their static
         credentials) before MCP calls on their behalf will work again.
 
-        `Authorization` is your Account API Key; `x-mewcp-key` is that server's own MewCP Key. The two are not interchangeable and both are required.
+        `Authorization` is your Account API Key; `x-mewcp-key` is that server's own API Key. The two are not interchangeable and both are required.
       tags: [Audience]
       security:
         - AccountApiKey: []
@@ -619,7 +619,7 @@ paths:
           required: true
           schema:
             type: string
-          description: MewCP Key of the business-mode server this end-user is connected under.
+          description: API Key of the business-mode server this end-user is connected under.
           example: mcp_live_7df44e73e8cd42bbf4860ffc66520ef...
       responses:
         "200":

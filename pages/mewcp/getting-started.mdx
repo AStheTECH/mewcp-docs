@@ -28,9 +28,9 @@ By the end of this tutorial you will have Claude Desktop connected to MewCP, wit
 
    Connect as many apps as you like, now or later. Every one of them is reachable through the same setup below.
 
-1. **Get your MewCP Key**
+1. **Get your API Key**
    1. In the dashboard go to **API Keys**
-   1. Copy your **MewCP Key**
+   1. Copy your **API Key**
 
    Your key looks like: `mcp_live_7df44e73e8cd42bb...`
 
@@ -112,7 +112,7 @@ If you have connected two accounts for the same app, `list_accounts` shows both 
 
 ### Your credentials stay with MewCP
 
-Connected credentials are encrypted at rest in a secure vault. They are decrypted and injected into the upstream request only at the moment a tool is called, and never travel to your client, your agent, or the model. Your config holds one MewCP Key and nothing else.
+Connected credentials are encrypted at rest in a secure vault. They are decrypted and injected into the upstream request only at the moment a tool is called, and never travel to your client, your agent, or the model. Your config holds one API Key and nothing else.
 
 Expired access is refreshed for you. If an app is not connected yet, or access was revoked, the call comes back with a link to hand to the user instead of failing quietly.
 
